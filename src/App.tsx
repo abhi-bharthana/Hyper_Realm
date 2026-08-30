@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { listen } from '@tauri-apps/api/event';
-import { getCurrentWindow } from '@tauri-apps/api/window'; // <-- Fullscreen API
+import { getCurrentWindow } from '@tauri-apps/api/window'; 
 import Sidebar from './components/Sidebar';
 import Home from './components/home/Home';
 import Dashboard from './components/Dashboard';
@@ -13,6 +13,7 @@ import Services from './components/Services';
 import Libraries from './components/Libraries';
 import Profile from './components/Profile';
 import Settings from './components/Settings';
+import WidgetsCore from './components/WidgetsCore'; // <-- NEW IMPORT
 import { useAppStore } from './store/useAppStore';
 
 export default function App() {
@@ -21,7 +22,6 @@ export default function App() {
     homeBackgroundType, homeBackgroundValue 
   } = useAppStore();
 
-  // 1. Process Event Listener
   useEffect(() => {
     let unlisten: Promise<() => void>;
     try {
@@ -32,12 +32,10 @@ export default function App() {
     return () => { if (unlisten) unlisten.then(f => f()); };
   }, [setAppIdle]);
 
-  // 2. Default Tab Logic
   useEffect(() => {
     if (!activeTab) setActiveTab('Home');
   }, [activeTab, setActiveTab]);
 
-  // 3. Theme Management Logic
   useEffect(() => {
     const root = window.document.documentElement;
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -49,10 +47,8 @@ export default function App() {
     }
   }, [theme]);
 
-  // 4. HP Laptop Fix: F11 or Alt+Enter for Fullscreen
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
-      // Allow both F11 AND Alt+Enter combinations
       if (e.key === 'F11' || (e.key === 'Enter' && e.altKey)) {
         e.preventDefault(); 
         try {
@@ -64,7 +60,6 @@ export default function App() {
         }
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
@@ -74,6 +69,7 @@ export default function App() {
       case 'Applications': return "Select an environment module to launch into isolated space.";
       case 'Hyper-Surf': return "Native isolated web browsing environment.";
       case 'Hyper-Media': return "System video directory scanner and playback unit."; 
+      case 'Widgets Core': return "Granular telemetry and standalone module orchestration."; // <-- NEW DESC
       case 'Processes': return "Live system metrics and resource consumption.";
       case 'Battery': return "Power draw and ARM64 efficiency node status.";
       case 'Dashboard': return "System core overview and analytics.";
@@ -95,11 +91,20 @@ export default function App() {
   const isHome = activeTab === 'Home';
   const showCustomBg = isHome && homeBackgroundType !== 'default';
 
+  const getRootPaddingClass = () => {
+    switch (uiDensity) {
+      case 'ultra': return 'p-2 gap-2';
+      case 'compact': return 'p-2.5 gap-2.5';
+      case 'spacious': return 'p-4 gap-4';
+      default: return 'p-3 gap-3';
+    }
+  };
+
   return (
     <div 
       className={`h-screen w-screen overflow-hidden flex relative font-sans selection:bg-blue-500/30 transition-all duration-700 ease-in-out ${
         showCustomBg ? 'text-white' : 'bg-slate-50 dark:bg-[#0a0a0c] text-slate-900 dark:text-zinc-100'
-      } ${uiDensity === 'ultra' ? 'p-2 gap-2' : uiDensity === 'compact' ? 'p-2.5 gap-2.5' : uiDensity === 'spacious' ? 'p-4 gap-4' : 'p-3 gap-3'}`}
+      } ${getRootPaddingClass()}`}
       style={
         showCustomBg ? {
           backgroundColor: homeBackgroundType === 'solid' ? homeBackgroundValue : 'transparent',
@@ -110,7 +115,6 @@ export default function App() {
         } : {}
       }
     >
-      
       {!showCustomBg && (
         <>
           <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-slate-300/40 dark:bg-zinc-800/10 blur-[140px] rounded-full pointer-events-none -z-10 transition-opacity duration-700" />
@@ -120,7 +124,7 @@ export default function App() {
       
       <Sidebar />
       
-      <main className={`flex-1 h-full flex flex-col overflow-hidden z-10 ${getDensityClass()}`}>
+      <main className={`flex-1 h-full flex flex-col overflow-hidden z-10 ${isHome ? 'p-0' : getDensityClass()}`}>
         {!isHome && activeTab !== 'Node Settings' && (
           <header className="flex-shrink-0 mb-2">
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-0.5">
@@ -137,6 +141,7 @@ export default function App() {
           {activeTab === 'Dashboard' && <Dashboard />}
           {activeTab === 'Applications' && <Applications />}
           {activeTab === 'Hyper-Surf' && <HyperSurf />}
+          {activeTab === 'Widgets Core' && <WidgetsCore />} {/* <-- NEW ROUTE */}
           {activeTab === 'Hyper-Media' && <VideoPlayer />}
           {activeTab === 'Processes' && <Processes />}
           {activeTab === 'Battery' && <Battery />}
