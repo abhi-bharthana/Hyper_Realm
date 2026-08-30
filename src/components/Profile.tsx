@@ -12,9 +12,11 @@ interface SystemInfo {
   architecture: string;
 }
 
+let cachedSysInfo: SystemInfo | null = null;
+
 export default function Profile() {
   const { userName, userTitle, userAvatar, updateProfile, updateAvatar } = useAppStore();
-  const [sysInfo, setSysInfo] = useState<SystemInfo | null>(null);
+  const [sysInfo, setSysInfo] = useState<SystemInfo | null>(cachedSysInfo);
   
   const [isEditing, setIsEditing] = useState(false);
   const [tempName, setTempName] = useState(userName);
@@ -24,8 +26,10 @@ export default function Profile() {
 
   useEffect(() => {
     const fetchInfo = async () => {
+      if (cachedSysInfo) return; 
       try {
         const info: SystemInfo = await invoke('get_system_info');
+        cachedSysInfo = info; 
         setSysInfo(info);
       } catch (err) { console.error("Failed to load system info", err); }
     };
@@ -33,7 +37,7 @@ export default function Profile() {
   }, []);
 
   const handleSave = () => {
-    updateProfile(tempName, tempTitle);
+    updateProfile(tempName, tempTitle); // Zustand will automatically save this permanently!
     setIsEditing(false);
   };
 
@@ -41,18 +45,17 @@ export default function Profile() {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => { updateAvatar(reader.result as string); };
+      reader.onloadend = () => { 
+        updateAvatar(reader.result as string); // Zustand will automatically persist the image!
+      };
       reader.readAsDataURL(file);
     }
   };
 
   return (
     <div className="flex flex-col gap-6 h-full pb-4">
-      {/* 1. Identity Section - Yahan 'shrink-0' add kiya jisse layout squish nahi hoga */}
       <div className="bg-white/60 dark:bg-slate-900/40 p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-white/5 backdrop-blur-xl shadow-sm flex flex-col md:flex-row items-center md:items-center gap-8 relative shrink-0">
-        
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[80px] rounded-full pointer-events-none" />
-
         <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageUpload} className="hidden" />
 
         <div 
@@ -79,12 +82,10 @@ export default function Profile() {
             <div className="space-y-3 max-w-sm mx-auto md:mx-0">
               <input 
                 type="text" value={tempName} onChange={(e) => setTempName(e.target.value)}
-                placeholder="Enter your name"
                 className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2 text-slate-900 dark:text-white font-bold"
               />
               <input 
                 type="text" value={tempTitle} onChange={(e) => setTempTitle(e.target.value)}
-                placeholder="Enter your title (e.g. Node Admin)"
                 className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2 text-slate-900 dark:text-white text-sm"
               />
               <div className="flex justify-center md:justify-start gap-2 pt-1">
@@ -110,7 +111,6 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* 2. Specs - Flex-1 ensure karta hai ye baaki bachi space lega */}
       <div className="flex-1 bg-white/60 dark:bg-slate-900/40 rounded-3xl border border-slate-200 dark:border-white/5 backdrop-blur-xl p-6 md:p-8 shadow-sm overflow-y-auto custom-scrollbar">
         <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center sticky top-0">
           <Monitor className="mr-3 text-blue-500" size={20} /> Device Specifications

@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
 import { listen } from '@tauri-apps/api/event';
+import { getCurrentWindow } from '@tauri-apps/api/window'; // <-- Fullscreen API
 import Sidebar from './components/Sidebar';
 import Home from './components/home/Home';
 import Dashboard from './components/Dashboard';
 import Applications from './components/Applications';
 import HyperSurf from './components/APP/HyperSurf';
-import VideoPlayer from './components/APP/VideoPlayer'; // <-- VideoPlayer Import kiya
+import VideoPlayer from './components/APP/VideoPlayer'; 
 import Processes from './components/Processes';
 import Battery from './components/Battery';
 import Services from './components/Services';
@@ -20,6 +21,7 @@ export default function App() {
     homeBackgroundType, homeBackgroundValue 
   } = useAppStore();
 
+  // 1. Process Event Listener
   useEffect(() => {
     let unlisten: Promise<() => void>;
     try {
@@ -30,10 +32,12 @@ export default function App() {
     return () => { if (unlisten) unlisten.then(f => f()); };
   }, [setAppIdle]);
 
+  // 2. Default Tab Logic
   useEffect(() => {
     if (!activeTab) setActiveTab('Home');
   }, [activeTab, setActiveTab]);
 
+  // 3. Theme Management Logic
   useEffect(() => {
     const root = window.document.documentElement;
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -45,11 +49,31 @@ export default function App() {
     }
   }, [theme]);
 
+  // 4. HP Laptop Fix: F11 or Alt+Enter for Fullscreen
+  useEffect(() => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
+      // Allow both F11 AND Alt+Enter combinations
+      if (e.key === 'F11' || (e.key === 'Enter' && e.altKey)) {
+        e.preventDefault(); 
+        try {
+          const appWindow = getCurrentWindow();
+          const isFullscreen = await appWindow.isFullscreen();
+          await appWindow.setFullscreen(!isFullscreen);
+        } catch (error) {
+          console.error("Fullscreen API block ho gaya. Permissions check karo:", error);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const getHeaderDescription = () => {
     switch (activeTab) {
       case 'Applications': return "Select an environment module to launch into isolated space.";
       case 'Hyper-Surf': return "Native isolated web browsing environment.";
-      case 'Hyper-Media': return "System video directory scanner and playback unit."; // <-- Description add kiya
+      case 'Hyper-Media': return "System video directory scanner and playback unit."; 
       case 'Processes': return "Live system metrics and resource consumption.";
       case 'Battery': return "Power draw and ARM64 efficiency node status.";
       case 'Dashboard': return "System core overview and analytics.";
@@ -113,7 +137,7 @@ export default function App() {
           {activeTab === 'Dashboard' && <Dashboard />}
           {activeTab === 'Applications' && <Applications />}
           {activeTab === 'Hyper-Surf' && <HyperSurf />}
-          {activeTab === 'Hyper-Media' && <VideoPlayer />} {/* <-- Route render add kiya */}
+          {activeTab === 'Hyper-Media' && <VideoPlayer />}
           {activeTab === 'Processes' && <Processes />}
           {activeTab === 'Battery' && <Battery />}
           {activeTab === 'Services/Nodes' && <Services />}
