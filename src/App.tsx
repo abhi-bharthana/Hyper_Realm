@@ -7,13 +7,16 @@ import Dashboard from './components/Dashboard';
 import Applications from './components/Applications';
 import HyperSurf from './components/APP/HyperSurf';
 import VideoPlayer from './components/APP/VideoPlayer'; 
+import MusicApp from './components/APP/music/MusicApp'; 
+import GlobalAudioEngine from './components/APP/music/GlobalAudioEngine';
 import Processes from './components/Processes';
 import Battery from './components/Battery';
 import Services from './components/Services';
 import Libraries from './components/Libraries';
 import Profile from './components/Profile';
 import Settings from './components/Settings';
-import WidgetsCore from './components/WidgetsCore'; // <-- NEW IMPORT
+import WidgetsCore from './components/WidgetsCore';
+import HyperLinkView from './components/hyperlink/HyperLinkView'; // <-- Added import
 import { useAppStore } from './store/useAppStore';
 
 export default function App() {
@@ -69,7 +72,9 @@ export default function App() {
       case 'Applications': return "Select an environment module to launch into isolated space.";
       case 'Hyper-Surf': return "Native isolated web browsing environment.";
       case 'Hyper-Media': return "System video directory scanner and playback unit."; 
-      case 'Widgets Core': return "Granular telemetry and standalone module orchestration."; // <-- NEW DESC
+      case 'Music': return "Native modular audio playback and library management."; 
+      case 'Widgets Core': return "Granular telemetry and standalone module orchestration.";
+      case 'Hyper-Link': return "Seamless connectivity, global cloud tunnels, and local network bridges."; // <-- Added Hyper-Link Header
       case 'Processes': return "Live system metrics and resource consumption.";
       case 'Battery': return "Power draw and ARM64 efficiency node status.";
       case 'Dashboard': return "System core overview and analytics.";
@@ -89,6 +94,9 @@ export default function App() {
   };
 
   const isHome = activeTab === 'Home';
+  const isAppView = ['Hyper-Surf', 'Hyper-Media', 'Music'].includes(activeTab);
+  const isFullscreenView = isHome || isAppView;
+  
   const showCustomBg = isHome && homeBackgroundType !== 'default';
 
   const getRootPaddingClass = () => {
@@ -115,7 +123,9 @@ export default function App() {
         } : {}
       }
     >
-      {!showCustomBg && (
+      <GlobalAudioEngine />
+      
+      {!showCustomBg && !isAppView && (
         <>
           <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-slate-300/40 dark:bg-zinc-800/10 blur-[140px] rounded-full pointer-events-none -z-10 transition-opacity duration-700" />
           <div className="absolute bottom-[-20%] right-[-10%] w-[40%] h-[40%] bg-slate-300/40 dark:bg-neutral-800/10 blur-[140px] rounded-full pointer-events-none -z-10 transition-opacity duration-700" />
@@ -124,8 +134,9 @@ export default function App() {
       
       <Sidebar />
       
-      <main className={`flex-1 h-full flex flex-col overflow-hidden z-10 ${isHome ? 'p-0' : getDensityClass()}`}>
-        {!isHome && activeTab !== 'Node Settings' && (
+      <main className={`flex-1 h-full flex flex-col overflow-hidden z-10 ${isFullscreenView ? 'p-0' : getDensityClass()}`}>
+        
+        {!isFullscreenView && activeTab !== 'Node Settings' && (
           <header className="flex-shrink-0 mb-2">
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-0.5">
               {activeTab === 'Dashboard' ? environmentName : activeTab}
@@ -136,13 +147,15 @@ export default function App() {
           </header>
         )}
         
-        <div className={`flex-1 overflow-y-auto custom-scrollbar ${isHome ? 'overflow-hidden' : 'pb-2 pr-1'}`}>
+        <div className={`flex-1 w-full h-full custom-scrollbar ${isFullscreenView ? 'overflow-hidden rounded-2xl md:rounded-3xl shadow-2xl' : 'overflow-y-auto pb-2 pr-1'}`}>
           {isHome && <Home />}
           {activeTab === 'Dashboard' && <Dashboard />}
           {activeTab === 'Applications' && <Applications />}
           {activeTab === 'Hyper-Surf' && <HyperSurf />}
-          {activeTab === 'Widgets Core' && <WidgetsCore />} {/* <-- NEW ROUTE */}
+          {activeTab === 'Hyper-Link' && <HyperLinkView />} {/* <-- Added render component */}
+          {activeTab === 'Widgets Core' && <WidgetsCore />}
           {activeTab === 'Hyper-Media' && <VideoPlayer />}
+          {activeTab === 'Music' && <MusicApp />} 
           {activeTab === 'Processes' && <Processes />}
           {activeTab === 'Battery' && <Battery />}
           {activeTab === 'Services/Nodes' && <Services />}

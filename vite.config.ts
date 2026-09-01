@@ -8,6 +8,13 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig(async () => ({
   plugins: [react()],
 
+  // Fix for jsmediatags Vite dependency scanning error
+  resolve: {
+    alias: {
+      'jsmediatags': 'jsmediatags/dist/jsmediatags.min.js',
+    },
+  },
+
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent Vite from obscuring rust errors

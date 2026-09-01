@@ -36,6 +36,15 @@ const initialApps: SystemAppExtended[] = [
     executable_path: 'internal://hyper-media',
     status: 'idle',
     mode: 'balanced'
+  },
+  {
+    id: 'hyper-music',
+    name: 'Music',
+    description: 'Native modular audio playback and library management.',
+    icon: 'Music',
+    executable_path: 'internal://hyper-music',
+    status: 'idle',
+    mode: 'balanced'
   }
 ];
 
@@ -55,6 +64,9 @@ interface AppState {
   homeClockPosition: 'top' | 'center' | 'bottom';
   homeBackgroundType: 'default' | 'solid' | 'gradient' | 'image';
   homeBackgroundValue: string;
+
+  // New Music Widget State
+  showMusicWidget: boolean;
   
   setUiDensity: (density: 'ultra' | 'compact' | 'normal' | 'spacious') => void;
   toggleSidebar: () => void;
@@ -71,6 +83,9 @@ interface AppState {
   setHomeClockSize: (size: 'small' | 'medium' | 'large') => void;
   setHomeClockPosition: (position: 'top' | 'center' | 'bottom') => void;
   setHomeBackground: (type: 'default' | 'solid' | 'gradient' | 'image', value: string) => void;
+  
+  // New Music Widget Setter
+  setShowMusicWidget: (show: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -91,6 +106,8 @@ export const useAppStore = create<AppState>()(
       homeClockPosition: 'center',
       homeBackgroundType: 'default',
       homeBackgroundValue: '',
+
+      showMusicWidget: true, // Default to true
       
       setUiDensity: (uiDensity) => set({ uiDensity }),
       toggleSidebar: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
@@ -104,17 +121,23 @@ export const useAppStore = create<AppState>()(
       setHomeClockPosition: (homeClockPosition) => set({ homeClockPosition }),
       setHomeBackground: (homeBackgroundType, homeBackgroundValue) => set({ homeBackgroundType, homeBackgroundValue }),
       
+      setShowMusicWidget: (showMusicWidget) => set({ showMusicWidget }),
+
       launchApp: async (id) => {
         const appToLaunch = get().apps.find(a => a.id === id);
         if (!appToLaunch) return;
 
-        // Agar internal app hai (jaise Hyper-Surf ya Hyper-Media), toh seedha tab switch kar do
+        // Internal routing for native modules
         if (id === 'hyper-surf') {
           set({ activeTab: 'Hyper-Surf' });
           return;
         }
         if (id === 'hyper-media') {
           set({ activeTab: 'Hyper-Media' });
+          return;
+        }
+        if (id === 'hyper-music') {
+          set({ activeTab: 'Music' });
           return;
         }
 
@@ -136,6 +159,6 @@ export const useAppStore = create<AppState>()(
       closeApp: (id) => get().setAppIdle(id),
       setAppIdle: (id) => set((state) => ({ apps: state.apps.map(app => app.id === id ? { ...app, status: 'idle', pid: undefined, mode: 'balanced' } : app) }))
     }),
-    { name: 'hyper-realm-storage-v67' } // Version bumped to clear old persistent cache
+    { name: 'hyper-realm-storage-v670' } // Bumped to v670 to register the new widget states cleanly
   )
 );

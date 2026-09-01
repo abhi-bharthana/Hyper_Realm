@@ -1,12 +1,13 @@
 import { 
   LayoutDashboard, Settings, Zap, Cpu, 
   AppWindow, Server, Package, Activity, BatteryMedium, UserCircle,
-  ChevronLeft, ChevronRight, Globe, Layers // <-- 'Layers' icon add kiya Widgets ke liye
+  ChevronLeft, ChevronRight, Globe, Layers, Music2, Film, Link // <-- Added Link icon
 } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 
 export default function Sidebar() {
-  const { activeTab, setActiveTab, isSidebarCollapsed, toggleSidebar, uiDensity } = useAppStore();
+  // Store se 'apps' aur 'launchApp' ko extract kiya
+  const { activeTab, setActiveTab, isSidebarCollapsed, toggleSidebar, uiDensity, apps, launchApp } = useAppStore();
 
   // 1. FIXED SLIM WIDTHS
   const getSidebarWidth = () => {
@@ -32,6 +33,27 @@ export default function Sidebar() {
       default: return 'py-5 px-3';
     }
   };
+
+  // --- RUNNING APPS LOGIC START ---
+  const isInternalAppActive = (appId: string) => {
+    if (appId === 'hyper-surf' && activeTab === 'Hyper-Surf') return true;
+    if (appId === 'hyper-media' && activeTab === 'Hyper-Media') return true;
+    if (appId === 'hyper-music' && activeTab === 'Music') return true;
+    return false;
+  };
+
+  const taskbarApps = apps.filter(app => app.status === 'running' || isInternalAppActive(app.id));
+
+  const renderAppIcon = (iconName: string, size: number) => {
+    switch(iconName) {
+      case 'Globe': return <Globe size={size} />;
+      case 'Film': return <Film size={size} />;
+      case 'Music': return <Music2 size={size} />;
+      case 'Activity': return <Activity size={size} />;
+      default: return <AppWindow size={size} />;
+    }
+  };
+  // --- RUNNING APPS LOGIC END ---
 
   return (
     <aside 
@@ -78,9 +100,13 @@ export default function Sidebar() {
       <nav className="flex-1 space-y-1.5 overflow-y-auto w-full modern-scroll pr-1 flex flex-col items-center">
         <NavItem icon={<LayoutDashboard size={getIconSize()} />} label="Dashboard" active={activeTab === 'Dashboard'} collapsed={isSidebarCollapsed} density={uiDensity} onClick={() => setActiveTab('Dashboard')} />
         <NavItem icon={<AppWindow size={getIconSize()} />} label="Applications" active={activeTab === 'Applications'} collapsed={isSidebarCollapsed} density={uiDensity} onClick={() => setActiveTab('Applications')} />
+        
+        {/* HYPER-LINK ADDED HERE */}
+        <NavItem icon={<Link size={getIconSize()} />} label="Hyper-Link" active={activeTab === 'Hyper-Link'} collapsed={isSidebarCollapsed} density={uiDensity} onClick={() => setActiveTab('Hyper-Link')} />
+        
         <NavItem icon={<Globe size={getIconSize()} />} label="Hyper-Surf" active={activeTab === 'Hyper-Surf'} collapsed={isSidebarCollapsed} density={uiDensity} onClick={() => setActiveTab('Hyper-Surf')} />
         
-        {/* --- NAYA WIDGETS CORE TAB --- */}
+        {/* NAYA WIDGETS CORE TAB */}
         <NavItem icon={<Layers size={getIconSize()} />} label="Widgets Core" active={activeTab === 'Widgets Core'} collapsed={isSidebarCollapsed} density={uiDensity} onClick={() => setActiveTab('Widgets Core')} />
         
         <NavItem icon={<Activity size={getIconSize()} />} label="Processes" active={activeTab === 'Processes'} collapsed={isSidebarCollapsed} density={uiDensity} onClick={() => setActiveTab('Processes')} />
@@ -93,6 +119,25 @@ export default function Sidebar() {
         <NavItem icon={<Package size={getIconSize()} />} label="Libraries" active={activeTab === 'Libraries/Packages'} collapsed={isSidebarCollapsed} density={uiDensity} onClick={() => setActiveTab('Libraries/Packages')} />
         <NavItem icon={<UserCircle size={getIconSize()} />} label="Profile" active={activeTab === 'Profile'} collapsed={isSidebarCollapsed} density={uiDensity} onClick={() => setActiveTab('Profile')} />
         <NavItem icon={<Settings size={getIconSize()} />} label="Settings" active={activeTab === 'Node Settings'} collapsed={isSidebarCollapsed} density={uiDensity} onClick={() => setActiveTab('Node Settings')} />
+        
+        {/* --- NAYA SECTION: RUNNING APPS (TASKBAR) --- */}
+        {taskbarApps.length > 0 && (
+          <>
+            <div className={`border-t border-neutral-200/60 dark:border-white/10 transition-all duration-500 my-2 ${isSidebarCollapsed ? 'w-1/2' : 'w-4/5'}`} />
+            {taskbarApps.map((app) => (
+              <NavItem 
+                key={app.id} 
+                icon={renderAppIcon(app.icon, getIconSize())} 
+                label={app.name} 
+                active={activeTab === app.name || (app.id === 'hyper-surf' && activeTab === 'Hyper-Surf') || (app.id === 'hyper-media' && activeTab === 'Hyper-Media') || (app.id === 'hyper-music' && activeTab === 'Music')} 
+                collapsed={isSidebarCollapsed} 
+                density={uiDensity} 
+                onClick={() => launchApp(app.id)} 
+              />
+            ))}
+          </>
+        )}
+
       </nav>
 
       {/* --- BOTTOM NODE STATUS --- */}

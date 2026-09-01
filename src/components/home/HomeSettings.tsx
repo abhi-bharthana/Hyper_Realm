@@ -18,7 +18,9 @@ const GRADIENT_PRESETS = [
 export default function HomeSettings({ onClose }: { onClose?: () => void }) {
   const { 
     homeShowClock, homeClockSize, homeClockPosition, homeBackgroundType, homeBackgroundValue,
-    setHomeShowClock, setHomeClockSize, setHomeClockPosition, setHomeBackground 
+    showMusicWidget, // Extracted widget state
+    setHomeShowClock, setHomeClockSize, setHomeClockPosition, setHomeBackground,
+    setShowMusicWidget // Extracted widget setter
   } = useAppStore();
 
   const [tempShowClock, setTempShowClock] = useState(homeShowClock);
@@ -26,6 +28,9 @@ export default function HomeSettings({ onClose }: { onClose?: () => void }) {
   const [tempClockPosition, setTempClockPosition] = useState(homeClockPosition);
   const [tempBgType, setTempBgType] = useState(homeBackgroundType);
   const [tempBgValue, setTempBgValue] = useState(homeBackgroundValue);
+  
+  // Local state for the widget toggle
+  const [tempShowMusicWidget, setTempShowMusicWidget] = useState(showMusicWidget);
   
   const [showToast, setShowToast] = useState(false);
 
@@ -81,6 +86,7 @@ export default function HomeSettings({ onClose }: { onClose?: () => void }) {
     setHomeClockSize(tempClockSize);
     setHomeClockPosition(tempClockPosition);
     setHomeBackground(tempBgType, tempBgValue);
+    setShowMusicWidget(tempShowMusicWidget); // Save widget toggle state
     
     setShowToast(true);
     setTimeout(() => {
@@ -125,6 +131,21 @@ export default function HomeSettings({ onClose }: { onClose?: () => void }) {
             </div>
           )}
         </div>
+
+        {/* --- NEW WIDGET SETTINGS SECTION --- */}
+        <div className="border-b border-neutral-200 dark:border-neutral-800 pb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-semibold text-neutral-800 dark:text-neutral-200">Floating Music Player</h4>
+              <p className="text-xs text-neutral-500 mt-1">Display a mini interactive music player on the Home screen</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+              <input type="checkbox" className="sr-only peer" checked={tempShowMusicWidget} onChange={(e) => setTempShowMusicWidget(e.target.checked)} />
+              <div className="w-12 h-6 bg-neutral-300 peer-focus:outline-none rounded-full peer dark:bg-neutral-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-neutral-700 peer-checked:bg-neutral-900 dark:peer-checked:bg-neutral-200"></div>
+            </label>
+          </div>
+        </div>
+        {/* ------------------------------------ */}
 
         {/* Background Settings */}
         <div className="pb-4">

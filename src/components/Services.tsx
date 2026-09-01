@@ -1,7 +1,19 @@
+import React from 'react';
+import CloudManager from "./services/cloud/CloudManager"; //[cite: 8]
+import ServerManager from "./services/server/ServerManager"; // Naya import
+
 export default function Services() {
   return (
-    <div className="h-64 rounded-3xl border-2 border-dashed border-slate-300 dark:border-white/10 flex items-center justify-center bg-slate-100/50 dark:bg-white/5 backdrop-blur-md">
-      <p className="text-slate-500 dark:text-slate-400 font-mono text-sm tracking-widest uppercase">Services & Nodes (Coming Soon)</p>
+    <div className="w-full h-full overflow-y-auto bg-slate-50 dark:bg-neutral-950 custom-scrollbar">
+      <div className="container mx-auto py-8 px-4 flex flex-col gap-6">
+        
+        {/* Naya Server Toggle & Features Panel */}
+        <ServerManager />
+
+        {/* Purana Cloud Manager[cite: 8] */}
+        <CloudManager />
+        
+      </div>
     </div>
   );
 }

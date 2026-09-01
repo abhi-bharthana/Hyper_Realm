@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Settings, X } from 'lucide-react';
 import HomeSettings from './HomeSettings';
+import MusicWidget from '../widgets/MusicWidget';
 import { useAppStore } from '../../store/useAppStore';
 
 export default function Home() {
@@ -53,9 +54,10 @@ export default function Home() {
         </div>
       )}
 
+      {/* Floating Music Widget Injected Here */}
+      <MusicWidget />
+
       {isSettingsOpen && (
-        // FIX: Changed 'absolute' to 'fixed' and increased z-index to 'z-[100]'
-        // Ab ye overlay bounding box se nikal kar poori screen ko cleanly dim karega
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-neutral-900/40 dark:bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           
           <div className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-[2rem] modern-scroll shadow-2xl bg-white/95 dark:bg-[#111111]/95 border border-neutral-200 dark:border-neutral-800 backdrop-blur-2xl">

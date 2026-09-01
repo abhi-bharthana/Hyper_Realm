@@ -23,19 +23,28 @@ tauri-plugin-opener = "2"
 tauri-plugin-shell = "2.3.5"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-sysinfo = "0.39.6" # Latest version, perfect for ARM
+sysinfo = "0.39.6"
 url = "2.5.8"
 uuid = { version = "1.26.0", features = ["v4"] }
 
-# 🔋 Naya add kiya hai actual laptop battery hardware read karne ke liye
+# 🔋 Battery hardware support
 battery = "0.7"
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+id3 = "1.17.1"
+walkdir = "2.5.0"
+base64 = "0.23.1"
 
+# 🌐 Axum & Server Dependencies (Sahi jagah par move kiya gaya)
+axum = "0.7.5"
+tower-http = { version = "0.5", features = ["cors"] }
+tokio = { version = "1.0", features = ["full"] }
+urlencoding = "2.1.3"
 
 # 🚀 ARM & BATTERY OPTIMIZATIONS (Release Build)
-# Jab tu 'npm run tauri build' chalayega, yeh settings app ko extremely lightweight bana dengi
 [profile.release]
-codegen-units = 1 # Compiler poore code ko ek saath analyze karega better optimization ke liye
-lto = true        # Link-Time Optimization (Binary size chota aur fast execution)
-opt-level = "s"   # 's' means optimize for size (Kam RAM footprint = Battery saving)
-strip = true      # Faltu debug symbols hata dega, resulting in a snappy, lightweight app
-panic = "abort"   # App crash handle optimize karta hai, binary size aur chota hota hai
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
+panic = "abort"
