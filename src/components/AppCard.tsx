@@ -1,68 +1,74 @@
-import { Play, Square, Activity, Globe, Film } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useAppStore, SystemAppExtended } from '../store/useAppStore';
+import React from 'react';
 
-export default function AppCard({ app }: { app: SystemAppExtended }) {
-  const { launchApp, closeApp } = useAppStore();
-  const isRunning = app.status === 'running' || app.id === 'hyper-surf' || app.id === 'hyper-media';
+interface AppCardProps {
+  name: string;
+  icon: React.ReactNode;
+  size?: 'small' | 'medium' | 'large';
+  showName?: boolean;
+  onClick?: () => void;
+}
 
-  // Dynamic Icon Selector based on app config
-  const renderIcon = () => {
-    switch (app.icon) {
-      case 'Globe': return <Globe size={22} />;
-      case 'Film': return <Film size={22} />;
-      default: return <Activity size={22} />;
-    }
+export const AppCard: React.FC<AppCardProps> = ({ 
+  name, 
+  icon, 
+  size = 'medium', 
+  showName = true, 
+  onClick 
+}) => {
+  
+  // Dynamic Sizes for Squircle Box
+  const boxDimensions = {
+    small: 'w-12 h-12 sm:w-14 sm:h-14 rounded-[14px] sm:rounded-[16px]',
+    medium: 'w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-[18px] sm:rounded-[22px]',
+    large: 'w-20 h-20 sm:w-[88px] sm:h-[88px] rounded-[22px] sm:rounded-[26px]',
+  };
+
+  // Dynamic Sizes for inner SVG Icon
+  const iconDimensions = {
+    small: '[&>svg]:w-[24px] [&>svg]:h-[24px] sm:[&>svg]:w-[28px] sm:[&>svg]:h-[28px]',
+    medium: '[&>svg]:w-[32px] [&>svg]:h-[32px] sm:[&>svg]:w-[36px] sm:[&>svg]:h-[36px]',
+    large: '[&>svg]:w-[40px] [&>svg]:h-[40px] sm:[&>svg]:w-[48px] sm:[&>svg]:h-[48px]',
+  };
+
+  // Container sizing based on icon size
+  const containerWidths = {
+    small: 'w-16 sm:w-20 gap-2',
+    medium: 'w-20 sm:w-24 gap-3.5',
+    large: 'w-24 sm:w-28 gap-4',
   };
 
   return (
-    <motion.div 
-      whileHover={{ y: -4, scale: 1.01 }}
-      transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      className={`p-6 rounded-2xl border backdrop-blur-xl flex flex-col justify-between group transition-all duration-500 ${
-        isRunning 
-          ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-300 dark:border-blue-500/30 shadow-[0_0_30px_-5px_rgba(59,130,246,0.15)]' 
-          : 'bg-white/60 dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.05] hover:bg-white dark:hover:bg-white/[0.04] hover:border-slate-300 dark:hover:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-none'
-      }`}
+    <div 
+      onClick={onClick}
+      className={`flex flex-col items-center justify-start cursor-pointer group ${containerWidths[size]}`}
     >
-      <div className="flex justify-between items-start mb-6">
-        <div className={`p-3.5 rounded-xl shadow-inner transition-colors duration-500 ${
-          isRunning 
-            ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20' 
-            : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/5'
-        }`}>
-          {renderIcon()}
-        </div>
-        <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-colors duration-500 ${
-          isRunning 
-            ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20' 
-            : 'bg-transparent text-slate-500 border-slate-300 dark:border-slate-700/50'
-        }`}>
-          {isRunning ? 'Active' : 'Offline'}
-        </div>
+      <div className={`
+        ${boxDimensions[size]}
+        ${iconDimensions[size]}
+        bg-[#1a1a1a] dark:bg-white
+        border border-transparent dark:border-slate-200/50
+        shadow-[0_8px_30px_rgba(0,0,0,0.15)] dark:shadow-[0_8px_25px_rgba(255,255,255,0.15)]
+        flex items-center justify-center shrink-0
+        transition-all duration-300 ease-out 
+        group-hover:-translate-y-1.5 
+        group-hover:shadow-[0_12px_40px_rgba(0,0,0,0.2)] dark:group-hover:shadow-[0_12px_35px_rgba(255,255,255,0.25)]
+        group-active:scale-95 
+        [&>svg]:stroke-white dark:[&>svg]:stroke-[#1a1a1a]
+        [&>svg]:stroke-[1.5]
+        [&>svg]:transition-transform [&>svg]:duration-300
+        group-hover:[&>svg]:scale-110
+      `}>
+        {icon}
       </div>
-
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-1.5 tracking-tight transition-colors">{app.name}</h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed transition-colors">{app.description}</p>
-      </div>
-
-      <button 
-        onClick={() => launchApp(app.id)}
-        className={`w-full flex items-center justify-center space-x-2 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 border ${
-          app.id !== 'hyper-surf' && app.id !== 'hyper-media' && isRunning 
-            ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 border-rose-200 dark:border-rose-500/20' 
-            : 'bg-slate-50 dark:bg-white/5 text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white border-slate-200 dark:border-white/5 hover:border-blue-600 dark:hover:border-blue-500 hover:shadow-[0_0_20px_-5px_rgba(59,130,246,0.3)] dark:hover:shadow-[0_0_20px_-5px_rgba(59,130,246,0.5)]'
-        }`}
-      >
-        {app.id === 'hyper-surf' || app.id === 'hyper-media' ? (
-          <><Play size={16} fill="currentColor" /> <span>Open Workspace</span></>
-        ) : isRunning ? (
-          <><Square size={16} /> <span>Terminate Task</span></>
-        ) : (
-          <><Play size={16} fill="currentColor" /> <span>Initialize</span></>
-        )}
-      </button>
-    </motion.div>
+      
+      {showName && (
+        <span className={`
+          text-slate-700 dark:text-slate-200 font-semibold tracking-wide truncate w-full text-center transition-colors duration-200
+          ${size === 'small' ? 'text-[11px]' : size === 'large' ? 'text-[15px]' : 'text-[13px] sm:text-sm'}
+        `}>
+          {name}
+        </span>
+      )}
+    </div>
   );
-}
+};

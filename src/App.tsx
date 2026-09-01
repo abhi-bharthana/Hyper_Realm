@@ -4,7 +4,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import Sidebar from './components/Sidebar';
 import Home from './components/home/Home';
 import Dashboard from './components/Dashboard';
-import Applications from './components/Applications';
+import { Applications } from './components/Applications';
 import HyperSurf from './components/APP/HyperSurf';
 import VideoPlayer from './components/APP/VideoPlayer'; 
 import MusicApp from './components/APP/music/MusicApp'; 

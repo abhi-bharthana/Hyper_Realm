@@ -1,49 +1,50 @@
 import React from 'react';
-import AppCard from './AppCard';
-import { useAppStore } from '../store/useAppStore';
+import { AppCard } from './AppCard';
+import { Globe, Music, Video } from 'lucide-react';
+import { useAppStore } from '../store/useAppStore'; 
 
-export default function Applications() {
-  const { apps } = useAppStore();
+export const Applications = () => {
+  const launchApp = useAppStore((state) => state.launchApp); 
+  
+  // Store se settings fetch kar rahe hain
+  const appIconSize = useAppStore((state) => state.appIconSize);
+  const appGridSpacing = useAppStore((state) => state.appGridSpacing);
+  const showAppNames = useAppStore((state) => state.showAppNames);
+
+  const activeApps = [
+    { id: 'hyper-surf', name: 'Browser', icon: <Globe /> },
+    { id: 'hyper-music', name: 'Music', icon: <Music /> },
+    { id: 'hyper-media', name: 'Video', icon: <Video /> },
+  ];
+
+  // Dynamic grid mapping
+  const gridGaps = {
+    tight: 'gap-x-4 sm:gap-x-6 gap-y-6',
+    normal: 'gap-x-8 sm:gap-x-12 gap-y-12',
+    relaxed: 'gap-x-12 sm:gap-x-20 gap-y-16',
+  };
 
   return (
-    <div className="relative w-full h-full pb-10">
-      <style>{`
-        @keyframes premiumPop {
-          0% { 
-            opacity: 0; 
-            transform: translateY(20px) scale(0.96); 
-          }
-          100% { 
-            opacity: 1; 
-            transform: translateY(0) scale(1);
-          }
-        }
-        .animate-premium-pop {
-          opacity: 0;
-          will-change: transform, opacity; /* GPU ko pehle se batata hai ki animation aane wali hai */
-          animation: premiumPop 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-      `}</style>
-
-      {/* Ambient background glow optimized with hardware acceleration */}
-      <div className="absolute inset-0 -z-10 pointer-events-none flex justify-center items-center overflow-hidden">
-        <div className="w-[70%] h-[70%] bg-blue-500/5 dark:bg-blue-400/5 blur-[80px] rounded-full"></div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 md:gap-8 pt-4 px-2">
-        {apps.map((app, index) => (
-          <div 
-            key={app.id} 
-            className="animate-premium-pop group cursor-pointer"
-            // Delay ko kam karke 60ms kar diya hai taaki animation jaldi aur smooth lage
-            style={{ animationDelay: `${index * 60}ms` }} 
-          >
-            <div className="h-full transition-transform duration-300 ease-out group-hover:-translate-y-1.5 rounded-2xl">
-              <AppCard app={app} />
-            </div>
+    <div className="w-full h-full flex flex-col items-start justify-start pt-4 sm:pt-6">
+      <div className="w-full max-w-5xl flex overflow-x-auto hide-scrollbar pb-8">
+        <div className="min-w-full h-auto flex justify-start px-4 pt-6">
+          
+          {/* Grid setup mapped with appGridSpacing state */}
+          <div className={`flex flex-wrap justify-start h-max w-full ${gridGaps[appGridSpacing]}`}>
+            {activeApps.map((app) => (
+              <AppCard 
+                key={app.id} 
+                name={app.name} 
+                icon={app.icon} 
+                size={appIconSize}
+                showName={showAppNames}
+                onClick={() => launchApp(app.id)} 
+              />
+            ))}
           </div>
-        ))}
+
+        </div>
       </div>
     </div>
   );
-}
+};

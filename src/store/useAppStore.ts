@@ -65,8 +65,11 @@ interface AppState {
   homeBackgroundType: 'default' | 'solid' | 'gradient' | 'image';
   homeBackgroundValue: string;
 
-  // New Music Widget State
   showMusicWidget: boolean;
+
+  appIconSize: 'small' | 'medium' | 'large';
+  appGridSpacing: 'tight' | 'normal' | 'relaxed';
+  showAppNames: boolean;
   
   setUiDensity: (density: 'ultra' | 'compact' | 'normal' | 'spacious') => void;
   toggleSidebar: () => void;
@@ -84,8 +87,11 @@ interface AppState {
   setHomeClockPosition: (position: 'top' | 'center' | 'bottom') => void;
   setHomeBackground: (type: 'default' | 'solid' | 'gradient' | 'image', value: string) => void;
   
-  // New Music Widget Setter
   setShowMusicWidget: (show: boolean) => void;
+
+  setAppIconSize: (size: 'small' | 'medium' | 'large') => void;
+  setAppGridSpacing: (spacing: 'tight' | 'normal' | 'relaxed') => void;
+  setShowAppNames: (show: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -107,7 +113,11 @@ export const useAppStore = create<AppState>()(
       homeBackgroundType: 'default',
       homeBackgroundValue: '',
 
-      showMusicWidget: true, // Default to true
+      showMusicWidget: true, 
+
+      appIconSize: 'medium',
+      appGridSpacing: 'normal',
+      showAppNames: true,
       
       setUiDensity: (uiDensity) => set({ uiDensity }),
       toggleSidebar: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
@@ -123,11 +133,20 @@ export const useAppStore = create<AppState>()(
       
       setShowMusicWidget: (showMusicWidget) => set({ showMusicWidget }),
 
+      setAppIconSize: (appIconSize) => set({ appIconSize }),
+      setAppGridSpacing: (appGridSpacing) => set({ appGridSpacing }),
+      setShowAppNames: (showAppNames) => set({ showAppNames }),
+
+      // LIFECYCLE FIX: launchApp ab internal apps ko 'running' set karega
       launchApp: async (id) => {
         const appToLaunch = get().apps.find(a => a.id === id);
         if (!appToLaunch) return;
 
-        // Internal routing for native modules
+        // Har app launch hone par turant running mark ho jayegi
+        set((state) => ({ 
+          apps: state.apps.map(app => app.id === id ? { ...app, status: 'running', mode: 'balanced' } : app) 
+        }));
+
         if (id === 'hyper-surf') {
           set({ activeTab: 'Hyper-Surf' });
           return;
@@ -145,9 +164,10 @@ export const useAppStore = create<AppState>()(
           const response: string = await invoke('launch_executable', { id: appToLaunch.id, path: appToLaunch.executable_path });
           const pidMatch = response.match(/PID: (\d+)/);
           const pid = pidMatch ? parseInt(pidMatch[1], 10) : undefined;
-          set((state) => ({ apps: state.apps.map(app => app.id === id ? { ...app, status: 'running', pid, mode: 'balanced' } : app) }));
+          set((state) => ({ apps: state.apps.map(app => app.id === id ? { ...app, pid } : app) }));
         } catch (error) { console.error("Launch Error:", error); }
       },
+      
       setAppMode: async (id, mode) => {
         const app = get().apps.find(a => a.id === id);
         if (!app || !app.pid) return;
@@ -156,9 +176,22 @@ export const useAppStore = create<AppState>()(
           set((state) => ({ apps: state.apps.map(a => a.id === id ? { ...a, mode } : a) }));
         } catch (error) { console.error("Mode Change Error:", error); }
       },
-      closeApp: (id) => get().setAppIdle(id),
+
+      // LIFECYCLE FIX: closeApp ab current active screen check karega
+      closeApp: (id) => {
+        const { activeTab } = get();
+        // Agar jo app band kar rahe hain, wohi currently display ho rahi hai, toh screen waapas Applications menu pe le jao
+        if ((id === 'hyper-surf' && activeTab === 'Hyper-Surf') || 
+            (id === 'hyper-media' && activeTab === 'Hyper-Media') || 
+            (id === 'hyper-music' && activeTab === 'Music')) {
+           set({ activeTab: 'Applications' }); 
+        }
+        // App ko completely idle mark karo
+        get().setAppIdle(id);
+      },
+
       setAppIdle: (id) => set((state) => ({ apps: state.apps.map(app => app.id === id ? { ...app, status: 'idle', pid: undefined, mode: 'balanced' } : app) }))
     }),
-    { name: 'hyper-realm-storage-v670' } // Bumped to v670 to register the new widget states cleanly
+    { name: 'hyper-realm-storage-v72' } // Bumped version to reset local storage caches
   )
 );
