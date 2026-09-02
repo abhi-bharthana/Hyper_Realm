@@ -17,6 +17,12 @@ export interface PlaylistData {
   trackPaths: string[];
 }
 
+export interface SleepTimerState {
+  active: boolean;
+  endTime: number | null;
+  mode: 'strict' | 'dynamic';
+}
+
 interface MusicState {
   playlist: Track[];
   historyPaths: string[]; 
@@ -24,13 +30,17 @@ interface MusicState {
   playlists: PlaylistData[]; 
   favorites: string[]; 
   
-  // 🔀 Naye States (Queue, Shuffle, Repeat)
+  // 🔀 Playback States
   queue: string[];
   isShuffle: boolean;
   repeatMode: 'off' | 'all' | 'one';
   
   currentTrackIndex: number | null;
   isPlaying: boolean;
+
+  // 🌙 Sleep Timer & ML Learning States
+  sleepTimer: SleepTimerState;
+  timerHistory: number[]; // Store recent timer durations for recommendations
   
   addDirectory: (path: string) => void;
   removeDirectory: (path: string) => void;
@@ -49,13 +59,17 @@ interface MusicState {
   removeTrackFromPlaylist: (playlistId: string, trackPath: string) => void;
   toggleFavorite: (path: string) => void;
   
-  // 🔀 Naye Actions
   toggleShuffle: () => void;
   toggleRepeat: () => void;
   addToQueue: (path: string) => void;
   playNext: (path: string) => void;
   removeFromQueue: (index: number) => void;
   clearQueue: () => void;
+
+  // 🌙 Sleep Timer Actions
+  setSleepTimer: (minutes: number, mode: 'strict' | 'dynamic') => void;
+  cancelSleepTimer: () => void;
+  getRecommendedTimers: () => number[];
 }
 
 export const useMusicStore = create<MusicState>()(
@@ -71,6 +85,10 @@ export const useMusicStore = create<MusicState>()(
       repeatMode: 'off',
       currentTrackIndex: null,
       isPlaying: false,
+
+      // Default state for timer
+      sleepTimer: { active: false, endTime: null, mode: 'dynamic' },
+      timerHistory: [],
 
       addDirectory: (path) => set((state) => ({ savedDirectories: state.savedDirectories.includes(path) ? state.savedDirectories : [...state.savedDirectories, path] })),
       removeDirectory: (path) => set((state) => ({ savedDirectories: state.savedDirectories.filter(d => d !== path), playlist: state.playlist.filter(t => !t.path.startsWith(path)) })),
@@ -98,13 +116,13 @@ export const useMusicStore = create<MusicState>()(
         if (playlist.length === 0) return;
 
         if (repeatMode === 'one' && currentTrackIndex !== null) {
-          playTrack(currentTrackIndex); // Wahi gaana wapas chalega
+          playTrack(currentTrackIndex);
           return;
         }
 
         if (queue.length > 0) {
           const nextPath = queue[0];
-          set({ queue: queue.slice(1) }); // Queue se gaana hatao
+          set({ queue: queue.slice(1) });
           const nextIndex = playlist.findIndex(t => t.path === nextPath);
           if (nextIndex !== -1) { playTrack(nextIndex); return; }
         }
@@ -119,9 +137,9 @@ export const useMusicStore = create<MusicState>()(
           if (currentTrackIndex + 1 < playlist.length) {
             playTrack(currentTrackIndex + 1);
           } else if (repeatMode === 'all') {
-            playTrack(0); // Playlist khatam hone par shuru se lagao
+            playTrack(0);
           } else {
-            set({ isPlaying: false }); // Stop playing
+            set({ isPlaying: false });
           }
         }
       },
@@ -146,16 +164,56 @@ export const useMusicStore = create<MusicState>()(
         return { repeatMode: modes[nextIndex] };
       }),
       addToQueue: (path) => set((state) => ({ queue: [...state.queue, path] })),
-      playNext: (path) => set((state) => ({ queue: [path, ...state.queue] })), // Queue mein sabse aage daalo
+      playNext: (path) => set((state) => ({ queue: [path, ...state.queue] })),
       removeFromQueue: (index) => set((state) => ({ queue: state.queue.filter((_, i) => i !== index) })),
       clearQueue: () => set({ queue: [] }),
+
+      // 🌙 SLEEP TIMER & LEARNING ACTIONS
+      setSleepTimer: (minutes, mode) => set((state) => {
+        // AI Learning: Keep track of the last 20 custom timer inputs
+        const newHistory = [minutes, ...state.timerHistory].slice(0, 20);
+        return { 
+          sleepTimer: { active: true, endTime: Date.now() + minutes * 60000, mode },
+          timerHistory: newHistory
+        };
+      }),
+      
+      cancelSleepTimer: () => set({ sleepTimer: { active: false, endTime: null, mode: 'dynamic' } }),
+      
+      getRecommendedTimers: () => {
+        const { timerHistory } = get();
+        const frequency: Record<number, number> = {};
+        
+        // Count frequency of each duration
+        timerHistory.forEach(min => {
+          frequency[min] = (frequency[min] || 0) + 1;
+        });
+
+        // Sort by most used
+        const sortedMostUsed = Object.entries(frequency)
+          .sort((a, b) => b[1] - a[1])
+          .map(entry => Number(entry[0]));
+
+        // Base defaults if user is new or history is short
+        const defaults = [15, 30, 45, 60];
+        
+        // Merge top choices with defaults, ensuring 4 unique options
+        const recommendations = [...new Set([...sortedMostUsed, ...defaults])].slice(0, 4);
+        
+        // Sort numerically for the UI grid (e.g., 15, 20, 30, 45)
+        return recommendations.sort((a, b) => a - b);
+      }
     }),
     { 
-      name: 'hyper-music-native-v6', // Bump to v6
+      name: 'hyper-music-native-v7', // Bump to v7 for new timerHistory state
       partialize: (state) => ({ 
-        savedDirectories: state.savedDirectories, historyPaths: state.historyPaths, 
-        playlists: state.playlists, favorites: state.favorites, 
-        isShuffle: state.isShuffle, repeatMode: state.repeatMode 
+        savedDirectories: state.savedDirectories, 
+        historyPaths: state.historyPaths, 
+        playlists: state.playlists, 
+        favorites: state.favorites, 
+        isShuffle: state.isShuffle, 
+        repeatMode: state.repeatMode,
+        timerHistory: state.timerHistory // Memorize user's timer habits
       })
     }
   )
