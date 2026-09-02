@@ -16,25 +16,25 @@ export const AppCard: React.FC<AppCardProps> = ({
   onClick 
 }) => {
   
-  // Dynamic Sizes for Squircle Box
+  // Dynamic Sizes for Squircle Box (Scaled with rem for UI Slider sync)
   const boxDimensions = {
-    small: 'w-12 h-12 sm:w-14 sm:h-14 rounded-[14px] sm:rounded-[16px]',
-    medium: 'w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-[18px] sm:rounded-[22px]',
-    large: 'w-20 h-20 sm:w-[88px] sm:h-[88px] rounded-[22px] sm:rounded-[26px]',
+    small: 'w-[3rem] h-[3rem] sm:w-[3.5rem] sm:h-[3.5rem] rounded-[0.8rem] sm:rounded-[1rem]',
+    medium: 'w-[4rem] h-[4rem] sm:w-[4.5rem] sm:h-[4.5rem] rounded-[1.1rem] sm:rounded-[1.3rem]',
+    large: 'w-[5rem] h-[5rem] sm:w-[5.5rem] sm:h-[5.5rem] rounded-[1.3rem] sm:rounded-[1.6rem]',
   };
 
-  // Dynamic Sizes for inner SVG Icon
+  // Dynamic Sizes for inner SVG Icon (Scaled with rem)
   const iconDimensions = {
-    small: '[&>svg]:w-[24px] [&>svg]:h-[24px] sm:[&>svg]:w-[28px] sm:[&>svg]:h-[28px]',
-    medium: '[&>svg]:w-[32px] [&>svg]:h-[32px] sm:[&>svg]:w-[36px] sm:[&>svg]:h-[36px]',
-    large: '[&>svg]:w-[40px] [&>svg]:h-[40px] sm:[&>svg]:w-[48px] sm:[&>svg]:h-[48px]',
+    small: '[&>svg]:w-[1.5rem] [&>svg]:h-[1.5rem] sm:[&>svg]:w-[1.75rem] sm:[&>svg]:h-[1.75rem]',
+    medium: '[&>svg]:w-[2rem] [&>svg]:h-[2rem] sm:[&>svg]:w-[2.25rem] sm:[&>svg]:h-[2.25rem]',
+    large: '[&>svg]:w-[2.5rem] [&>svg]:h-[2.5rem] sm:[&>svg]:w-[3rem] sm:[&>svg]:h-[3rem]',
   };
 
-  // Container sizing based on icon size
+  // Container sizing based on icon size (Scaled with rem)
   const containerWidths = {
-    small: 'w-16 sm:w-20 gap-2',
-    medium: 'w-20 sm:w-24 gap-3.5',
-    large: 'w-24 sm:w-28 gap-4',
+    small: 'w-[4rem] sm:w-[5rem] gap-[0.5rem]',
+    medium: 'w-[5rem] sm:w-[6rem] gap-[0.75rem]',
+    large: 'w-[6rem] sm:w-[7rem] gap-[1rem]',
   };
 
   return (
@@ -47,11 +47,11 @@ export const AppCard: React.FC<AppCardProps> = ({
         ${iconDimensions[size]}
         bg-[#1a1a1a] dark:bg-white
         border border-transparent dark:border-slate-200/50
-        shadow-[0_8px_30px_rgba(0,0,0,0.15)] dark:shadow-[0_8px_25px_rgba(255,255,255,0.15)]
+        shadow-[0_0.5rem_2rem_rgba(0,0,0,0.15)] dark:shadow-[0_0.5rem_1.5rem_rgba(255,255,255,0.15)]
         flex items-center justify-center shrink-0
         transition-all duration-300 ease-out 
-        group-hover:-translate-y-1.5 
-        group-hover:shadow-[0_12px_40px_rgba(0,0,0,0.2)] dark:group-hover:shadow-[0_12px_35px_rgba(255,255,255,0.25)]
+        group-hover:-translate-y-[0.3rem] 
+        group-hover:shadow-[0_0.75rem_2.5rem_rgba(0,0,0,0.2)] dark:group-hover:shadow-[0_0.75rem_2rem_rgba(255,255,255,0.25)]
         group-active:scale-95 
         [&>svg]:stroke-white dark:[&>svg]:stroke-[#1a1a1a]
         [&>svg]:stroke-[1.5]
@@ -64,7 +64,7 @@ export const AppCard: React.FC<AppCardProps> = ({
       {showName && (
         <span className={`
           text-slate-700 dark:text-slate-200 font-semibold tracking-wide truncate w-full text-center transition-colors duration-200
-          ${size === 'small' ? 'text-[11px]' : size === 'large' ? 'text-[15px]' : 'text-[13px] sm:text-sm'}
+          ${size === 'small' ? 'text-[0.7em]' : size === 'large' ? 'text-[0.95em]' : 'text-[0.8em] sm:text-[0.85em]'}
         `}>
           {name}
         </span>

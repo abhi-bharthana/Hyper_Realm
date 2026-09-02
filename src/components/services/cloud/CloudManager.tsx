@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-
 import CloudHeader from './CloudHeader';
 import CloudControls from './CloudControls';
 import CloudLinkDisplay from './CloudLinkDisplay';
@@ -12,14 +11,14 @@ export default function CloudManager() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // 🎧 Backend se successful connection event sunn rahe hain
+    // Backend se successful connection event sunn rahe hain
     const unlistenReady = listen<string>('tunnel-ready', (event) => {
       setTunnelUrl(event.payload);
       setIsRunning(true);
       setIsLoading(false); // Loading khatam, URL live!
     });
 
-    // 🎧 Error ya stop event sunn rahe hain
+    // Error ya stop event sunn rahe hain
     const unlistenError = listen<string>('tunnel-error', (event) => {
       console.error("Tunnel error:", event.payload);
       setIsLoading(false);
@@ -60,10 +59,10 @@ export default function CloudManager() {
   };
 
   return (
-    <div className="p-6 md:p-10 w-full max-w-2xl mx-auto flex flex-col gap-8">
+    <div className="p-[1.5rem] md:p-[2.5rem] w-full max-w-[40rem] mx-auto flex flex-col gap-[2rem]">
       <CloudHeader isRunning={isRunning} />
-
-      <div className={`p-6 rounded-3xl border transition-all duration-500 ${isRunning ? 'bg-blue-500/5 border-blue-500/20' : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10'}`}>
+      
+      <div className={`p-[1.5rem] rounded-[1.5rem] border transition-all duration-500 shadow-sm ${isRunning ? 'bg-blue-500/5 border-blue-500/20' : 'bg-white/70 dark:bg-zinc-900/80 border-slate-200 dark:border-white/[0.08]'}`}>
         <CloudControls 
           isRunning={isRunning} 
           isLoading={isLoading} 

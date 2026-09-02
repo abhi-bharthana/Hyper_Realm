@@ -1,7 +1,10 @@
+// BAAKI IMPORTS WAHI RAHENGE...
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { invoke } from '@tauri-apps/api/core';
 import { SystemApp } from '../types';
+import { CORE_APPS } from '../components/APP/appRegistry';
+import { SYSTEM_SERVICES } from '../components/services/serviceRegistry';
 
 export interface SystemAppExtended extends Omit<SystemApp, 'status'> {
   status: 'idle' | 'running' | 'error';
@@ -9,51 +12,14 @@ export interface SystemAppExtended extends Omit<SystemApp, 'status'> {
   pid?: number;
 }
 
-const initialApps: SystemAppExtended[] = [
-  {
-    id: 'calc-test',
-    name: 'System Calculator',
-    description: 'Native Windows OS Tool for testing IPC bridge',
-    icon: 'Activity',
-    executable_path: 'C:/Windows/System32/calc.exe',
-    status: 'idle',
-    mode: 'balanced'
-  },
-  {
-    id: 'hyper-surf',
-    name: 'Hyper-Surf',
-    description: 'Native isolated web browsing environment with advanced controls.',
-    icon: 'Globe',
-    executable_path: 'internal://hyper-surf',
-    status: 'idle',
-    mode: 'balanced'
-  },
-  {
-    id: 'hyper-media',
-    name: 'Hyper-Media',
-    description: 'High-performance local and stream video playback unit.',
-    icon: 'Film',
-    executable_path: 'internal://hyper-media',
-    status: 'idle',
-    mode: 'balanced'
-  },
-  {
-    id: 'hyper-music',
-    name: 'Music',
-    description: 'Native modular audio playback and library management.',
-    icon: 'Music',
-    executable_path: 'internal://hyper-music',
-    status: 'idle',
-    mode: 'balanced'
-  }
-];
+const initialApps: SystemAppExtended[] = [...CORE_APPS, ...SYSTEM_SERVICES];
 
 interface AppState {
   environmentName: string;
   apps: SystemAppExtended[];
   theme: 'light' | 'dark' | 'system';
   activeTab: string;
-  uiDensity: 'ultra' | 'compact' | 'normal' | 'spacious';
+  uiDensity: 'ultra' | 'compact' | 'normal' | 'spacious'; // Kept for legacy fallback
   isSidebarCollapsed: boolean;
   userName: string;
   userTitle: string;
@@ -64,12 +30,19 @@ interface AppState {
   homeClockPosition: 'top' | 'center' | 'bottom';
   homeBackgroundType: 'default' | 'solid' | 'gradient' | 'image';
   homeBackgroundValue: string;
-
   showMusicWidget: boolean;
 
   appIconSize: 'small' | 'medium' | 'large';
   appGridSpacing: 'tight' | 'normal' | 'relaxed';
   showAppNames: boolean;
+  isSidebarAutoHide: boolean;
+
+  // ==== NAYE UI ENGINE STATES ====
+  globalFontFamily: string;
+  uiScale: number;      // 0.8 to 1.5 (Controls boxes/buttons)
+  textScale: number;    // 0.8 to 1.5 (Controls fonts)
+  isEyeCareEnabled: boolean;
+  eyeCareIntensity: number; // 0 to 100
   
   setUiDensity: (density: 'ultra' | 'compact' | 'normal' | 'spacious') => void;
   toggleSidebar: () => void;
@@ -86,12 +59,18 @@ interface AppState {
   setHomeClockSize: (size: 'small' | 'medium' | 'large') => void;
   setHomeClockPosition: (position: 'top' | 'center' | 'bottom') => void;
   setHomeBackground: (type: 'default' | 'solid' | 'gradient' | 'image', value: string) => void;
-  
   setShowMusicWidget: (show: boolean) => void;
-
   setAppIconSize: (size: 'small' | 'medium' | 'large') => void;
   setAppGridSpacing: (spacing: 'tight' | 'normal' | 'relaxed') => void;
   setShowAppNames: (show: boolean) => void;
+  setSidebarAutoHide: (autoHide: boolean) => void;
+
+  // ==== NAYE SETTERS ====
+  setGlobalFontFamily: (font: string) => void;
+  setUiScale: (scale: number) => void;
+  setTextScale: (scale: number) => void;
+  toggleEyeCare: () => void;
+  setEyeCareIntensity: (intensity: number) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -112,12 +91,19 @@ export const useAppStore = create<AppState>()(
       homeClockPosition: 'center',
       homeBackgroundType: 'default',
       homeBackgroundValue: '',
-
       showMusicWidget: true, 
 
       appIconSize: 'medium',
       appGridSpacing: 'normal',
       showAppNames: true,
+      isSidebarAutoHide: false, 
+
+      // ==== DEFAULT UI ENGINE VALUES ====
+      globalFontFamily: 'sans-serif',
+      uiScale: 1, 
+      textScale: 1,
+      isEyeCareEnabled: false,
+      eyeCareIntensity: 30,
       
       setUiDensity: (uiDensity) => set({ uiDensity }),
       toggleSidebar: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
@@ -130,36 +116,27 @@ export const useAppStore = create<AppState>()(
       setHomeClockSize: (homeClockSize) => set({ homeClockSize }),
       setHomeClockPosition: (homeClockPosition) => set({ homeClockPosition }),
       setHomeBackground: (homeBackgroundType, homeBackgroundValue) => set({ homeBackgroundType, homeBackgroundValue }),
-      
       setShowMusicWidget: (showMusicWidget) => set({ showMusicWidget }),
 
       setAppIconSize: (appIconSize) => set({ appIconSize }),
       setAppGridSpacing: (appGridSpacing) => set({ appGridSpacing }),
       setShowAppNames: (showAppNames) => set({ showAppNames }),
+      setSidebarAutoHide: (isSidebarAutoHide) => set({ isSidebarAutoHide }),
 
-      // LIFECYCLE FIX: launchApp ab internal apps ko 'running' set karega
+      // ==== NEW SETTERS CONFIG ====
+      setGlobalFontFamily: (globalFontFamily) => set({ globalFontFamily }),
+      setUiScale: (uiScale) => set({ uiScale }),
+      setTextScale: (textScale) => set({ textScale }),
+      toggleEyeCare: () => set((state) => ({ isEyeCareEnabled: !state.isEyeCareEnabled })),
+      setEyeCareIntensity: (eyeCareIntensity) => set({ eyeCareIntensity }),
+
       launchApp: async (id) => {
         const appToLaunch = get().apps.find(a => a.id === id);
         if (!appToLaunch) return;
-
-        // Har app launch hone par turant running mark ho jayegi
-        set((state) => ({ 
-          apps: state.apps.map(app => app.id === id ? { ...app, status: 'running', mode: 'balanced' } : app) 
-        }));
-
-        if (id === 'hyper-surf') {
-          set({ activeTab: 'Hyper-Surf' });
-          return;
-        }
-        if (id === 'hyper-media') {
-          set({ activeTab: 'Hyper-Media' });
-          return;
-        }
-        if (id === 'hyper-music') {
-          set({ activeTab: 'Music' });
-          return;
-        }
-
+        set((state) => ({ apps: state.apps.map(app => app.id === id ? { ...app, status: 'running', mode: 'balanced' } : app) }));
+        if (id === 'hyper-surf') { set({ activeTab: 'Hyper-Surf' }); return; }
+        if (id === 'hyper-media') { set({ activeTab: 'Hyper-Media' }); return; }
+        if (id === 'hyper-music') { set({ activeTab: 'Music' }); return; }
         try {
           const response: string = await invoke('launch_executable', { id: appToLaunch.id, path: appToLaunch.executable_path });
           const pidMatch = response.match(/PID: (\d+)/);
@@ -177,21 +154,18 @@ export const useAppStore = create<AppState>()(
         } catch (error) { console.error("Mode Change Error:", error); }
       },
 
-      // LIFECYCLE FIX: closeApp ab current active screen check karega
       closeApp: (id) => {
         const { activeTab } = get();
-        // Agar jo app band kar rahe hain, wohi currently display ho rahi hai, toh screen waapas Applications menu pe le jao
         if ((id === 'hyper-surf' && activeTab === 'Hyper-Surf') || 
             (id === 'hyper-media' && activeTab === 'Hyper-Media') || 
             (id === 'hyper-music' && activeTab === 'Music')) {
            set({ activeTab: 'Applications' }); 
         }
-        // App ko completely idle mark karo
         get().setAppIdle(id);
       },
 
       setAppIdle: (id) => set((state) => ({ apps: state.apps.map(app => app.id === id ? { ...app, status: 'idle', pid: undefined, mode: 'balanced' } : app) }))
     }),
-    { name: 'hyper-realm-storage-v72' } // Bumped version to reset local storage caches
+    { name: 'hyper-realm-storage-v76' } 
   )
 );

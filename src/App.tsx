@@ -16,15 +16,18 @@ import Libraries from './components/Libraries';
 import Profile from './components/Profile';
 import Settings from './components/Settings';
 import WidgetsCore from './components/WidgetsCore';
-import HyperLinkView from './components/hyperlink/HyperLinkView'; // <-- Added import
+import HyperLinkView from './components/hyperlink/HyperLinkView'; 
 import { useAppStore } from './store/useAppStore';
 
 export default function App() {
   const { 
-    environmentName, theme, activeTab, setActiveTab, setAppIdle, uiDensity,
-    homeBackgroundType, homeBackgroundValue 
+    environmentName, theme, activeTab, setActiveTab, setAppIdle, 
+    homeBackgroundType, homeBackgroundValue,
+    // === NAYE STATES IMPORT KIYE ===
+    globalFontFamily, uiScale, textScale, isEyeCareEnabled, eyeCareIntensity 
   } = useAppStore();
 
+  // 1. Process Lifecycle Listener
   useEffect(() => {
     let unlisten: Promise<() => void>;
     try {
@@ -39,17 +42,34 @@ export default function App() {
     if (!activeTab) setActiveTab('Home');
   }, [activeTab, setActiveTab]);
 
+  // 2. TIGHT THEME CONTROLLER (Live OS Sync)
   useEffect(() => {
     const root = window.document.documentElement;
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    root.classList.remove('light', 'dark');
-    if (theme === 'system') {
-      root.classList.add(systemPrefersDark ? 'dark' : 'light');
-    } else {
-      root.classList.add(theme);
-    }
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const applyTheme = (currentTheme: string) => {
+      root.classList.remove('light', 'dark');
+      if (currentTheme === 'system') {
+        root.classList.add(mediaQuery.matches ? 'dark' : 'light');
+      } else {
+        root.classList.add(currentTheme);
+      }
+    };
+
+    applyTheme(theme);
+
+    // Live listener for OS theme switch
+    const handleSystemThemeChange = () => {
+      if (useAppStore.getState().theme === 'system') {
+        applyTheme('system');
+      }
+    };
+    
+    mediaQuery.addEventListener('change', handleSystemThemeChange);
+    return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
   }, [theme]);
 
+  // 3. Fullscreen Keybinds
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
       if (e.key === 'F11' || (e.key === 'Enter' && e.altKey)) {
@@ -59,7 +79,7 @@ export default function App() {
           const isFullscreen = await appWindow.isFullscreen();
           await appWindow.setFullscreen(!isFullscreen);
         } catch (error) {
-          console.error("Fullscreen API block ho gaya. Permissions check karo:", error);
+          console.error("Fullscreen API blocked:", error);
         }
       }
     };
@@ -74,7 +94,7 @@ export default function App() {
       case 'Hyper-Media': return "System video directory scanner and playback unit."; 
       case 'Music': return "Native modular audio playback and library management."; 
       case 'Widgets Core': return "Granular telemetry and standalone module orchestration.";
-      case 'Hyper-Link': return "Seamless connectivity, global cloud tunnels, and local network bridges."; // <-- Added Hyper-Link Header
+      case 'Hyper-Link': return "Seamless connectivity, global cloud tunnels, and local network bridges."; 
       case 'Processes': return "Live system metrics and resource consumption.";
       case 'Battery': return "Power draw and ARM64 efficiency node status.";
       case 'Dashboard': return "System core overview and analytics.";
@@ -84,35 +104,16 @@ export default function App() {
     }
   };
 
-  const getDensityClass = () => {
-    switch (uiDensity) {
-      case 'ultra': return 'p-2 md:p-3 gap-2';
-      case 'compact': return 'p-3 md:p-4 gap-2.5';
-      case 'spacious': return 'p-6 md:p-8 gap-5';
-      default: return 'p-4 md:p-6 gap-3.5';
-    }
-  };
-
   const isHome = activeTab === 'Home';
   const isAppView = ['Hyper-Surf', 'Hyper-Media', 'Music'].includes(activeTab);
   const isFullscreenView = isHome || isAppView;
-  
   const showCustomBg = isHome && homeBackgroundType !== 'default';
-
-  const getRootPaddingClass = () => {
-    switch (uiDensity) {
-      case 'ultra': return 'p-2 gap-2';
-      case 'compact': return 'p-2.5 gap-2.5';
-      case 'spacious': return 'p-4 gap-4';
-      default: return 'p-3 gap-3';
-    }
-  };
 
   return (
     <div 
       className={`h-screen w-screen overflow-hidden flex relative font-sans selection:bg-blue-500/30 transition-all duration-700 ease-in-out ${
         showCustomBg ? 'text-white' : 'bg-slate-50 dark:bg-[#0a0a0c] text-slate-900 dark:text-zinc-100'
-      } ${getRootPaddingClass()}`}
+      }`}
       style={
         showCustomBg ? {
           backgroundColor: homeBackgroundType === 'solid' ? homeBackgroundValue : 'transparent',
@@ -123,6 +124,50 @@ export default function App() {
         } : {}
       }
     >
+{/* ======= TIGHT UI SCALING & FONT ENGINE ======= */}
+      <style>{`
+        :root {
+          /* UI Scale directly controls 1rem base (Boxes, Layouts, Toggles only) */
+          font-size: ${14 * uiScale}px !important; 
+          font-family: ${globalFontFamily};
+        }
+        
+        /* 
+           FIXED TEXT ENGINE: 
+           Yeh sirf text classes ko target karega aur unhe 'rem' mein output dega.
+           Isse Text Slider sirf font badhayega, aur Toggles untouched rahenge!
+        */
+        .text-\\[0\\.65em\\] { font-size: calc(0.65rem * ${textScale}) !important; }
+        .text-\\[0\\.75em\\] { font-size: calc(0.75rem * ${textScale}) !important; }
+        .text-\\[0\\.8em\\] { font-size: calc(0.8rem * ${textScale}) !important; }
+        .text-\\[0\\.85em\\] { font-size: calc(0.85rem * ${textScale}) !important; }
+        .text-\\[0\\.9em\\] { font-size: calc(0.9rem * ${textScale}) !important; }
+        .text-\\[0\\.95em\\] { font-size: calc(0.95rem * ${textScale}) !important; }
+        .text-\\[1em\\] { font-size: calc(1rem * ${textScale}) !important; }
+        .text-\\[1\\.1em\\] { font-size: calc(1.1rem * ${textScale}) !important; }
+        .text-\\[1\\.5em\\] { font-size: calc(1.5rem * ${textScale}) !important; }
+        .text-\\[1\\.75em\\] { font-size: calc(1.75rem * ${textScale}) !important; }
+        .text-\\[1\\.8em\\] { font-size: calc(1.8rem * ${textScale}) !important; }
+        
+        /* Fallback for standard Tailwind classes */
+        .text-xs { font-size: calc(0.75rem * ${textScale}) !important; }
+        .text-sm { font-size: calc(0.875rem * ${textScale}) !important; }
+        .text-base { font-size: calc(1rem * ${textScale}) !important; }
+        .text-lg { font-size: calc(1.125rem * ${textScale}) !important; }
+      `}</style>      {/* ================================================= */}
+
+      {/* ======= EYE CARE BLUELIGHT FILTER ======= */}
+      {isEyeCareEnabled && (
+        <div 
+          className="fixed inset-0 z-[99999] pointer-events-none mix-blend-multiply transition-opacity duration-700"
+          style={{ 
+            backgroundColor: '#ff8c00', // Warm amber/orange
+            opacity: eyeCareIntensity / 100 
+          }}
+        />
+      )}
+      {/* ========================================= */}
+
       <GlobalAudioEngine />
       
       {!showCustomBg && !isAppView && (
@@ -134,25 +179,26 @@ export default function App() {
       
       <Sidebar />
       
-      <main className={`flex-1 h-full flex flex-col overflow-hidden z-10 ${isFullscreenView ? 'p-0' : getDensityClass()}`}>
+      {/* Fixed root padding with fallback scaling */}
+      <main className={`flex-1 h-full flex flex-col overflow-hidden z-10 ${isFullscreenView ? 'p-0' : 'p-[1.5em] gap-[1em]'}`}>
         
         {!isFullscreenView && activeTab !== 'Node Settings' && (
-          <header className="flex-shrink-0 mb-2">
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-0.5">
+          <header className="flex-shrink-0 mb-[0.5em]">
+            <h2 className="text-[1.8em] font-bold tracking-tight mb-[0.1em] transition-all duration-300">
               {activeTab === 'Dashboard' ? environmentName : activeTab}
             </h2>
-            <p className="opacity-60 text-xs md:text-sm font-medium">
+            <p className="opacity-60 text-[0.9em] font-medium transition-all duration-300">
               {getHeaderDescription()}
             </p>
           </header>
         )}
         
-        <div className={`flex-1 w-full h-full custom-scrollbar ${isFullscreenView ? 'overflow-hidden rounded-2xl md:rounded-3xl shadow-2xl' : 'overflow-y-auto pb-2 pr-1'}`}>
+        <div className={`flex-1 w-full h-full custom-scrollbar ${isFullscreenView ? 'overflow-hidden rounded-[1.5em] shadow-2xl' : 'overflow-y-auto pb-2 pr-1'}`}>
           {isHome && <Home />}
           {activeTab === 'Dashboard' && <Dashboard />}
           {activeTab === 'Applications' && <Applications />}
           {activeTab === 'Hyper-Surf' && <HyperSurf />}
-          {activeTab === 'Hyper-Link' && <HyperLinkView />} {/* <-- Added render component */}
+          {activeTab === 'Hyper-Link' && <HyperLinkView />} 
           {activeTab === 'Widgets Core' && <WidgetsCore />}
           {activeTab === 'Hyper-Media' && <VideoPlayer />}
           {activeTab === 'Music' && <MusicApp />} 

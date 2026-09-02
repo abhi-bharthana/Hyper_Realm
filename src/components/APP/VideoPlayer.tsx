@@ -97,31 +97,24 @@ export default function VideoPlayer() {
     }
   };
 
-  // Custom Player Transcode & Play Pipeline
   const playSystemVideo = async (video: VideoItem) => {
     setVideoTitle(`Preparing ${video.name}...`);
     setErrorMessage(null);
     setIsTranscoding(true);
 
     try {
-      // Backend se optimized/cached mp4 path mangwana
       const processedPath = await invoke<string>('prepare_video_playback', { filePath: video.path });
-      
       if (processedPath) {
         const assetUrl = convertFileSrc(processedPath);
         setVideoSrc(assetUrl);
         setVideoTitle(video.name);
         setIsTranscoding(false);
         setIsPlaying(true);
-
         setTimeout(() => {
-          if (videoRef.current) {
-            videoRef.current.play().catch(e => setErrorMessage(`Autoplay blocked: ${e.message}`));
-          }
+          if (videoRef.current) videoRef.current.play().catch(e => setErrorMessage(`Autoplay blocked: ${e.message}`));
         }, 150);
       }
     } catch (error: any) {
-      console.error("Playback prep error:", error);
       setIsTranscoding(false);
       setErrorMessage(`Failed to prepare video: ${error.toString()}`);
       setVideoTitle("Playback Failed");
@@ -135,32 +128,30 @@ export default function VideoPlayer() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#0f0f12] text-zinc-100 rounded-3xl overflow-hidden border border-white/10 shadow-2xl p-6 md:p-8 gap-6">
+    // Fixed: Now syncs with global light/dark theme seamlessly
+    <div className="h-full flex flex-col bg-white/50 dark:bg-[#0a0a0c]/80 text-slate-900 dark:text-zinc-100 rounded-[1.5rem] overflow-hidden border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-[0_1rem_3rem_rgba(0,0,0,0.5)] p-[1.5rem] md:p-[2rem] gap-[1.5rem] transition-colors duration-500">
       
-      <VideoHeader 
-        isLoading={isLoading} 
-        onScan={fetchSystemVideos} 
-        onFileSelect={handleFileSelect} 
-      />
+      <VideoHeader isLoading={isLoading} onScan={fetchSystemVideos} onFileSelect={handleFileSelect} />
 
+      {/* Error Box Fixed: Adapts to theme properly */}
       {errorMessage && (
-        <div className="bg-amber-500/10 border border-amber-500/30 text-amber-400 px-4 py-3 rounded-2xl flex items-center gap-3 text-xs shrink-0">
-          <AlertCircle size={16} className="shrink-0" />
-          <span className="font-mono">{errorMessage}</span>
+        <div className="bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 px-[1rem] py-[0.75rem] rounded-[1rem] flex items-center gap-[0.75rem] shrink-0">
+          <AlertCircle className="w-[1rem] h-[1rem] shrink-0" />
+          <span className="font-mono text-[0.75em]">{errorMessage}</span>
         </div>
       )}
 
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 overflow-hidden">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-[1.5rem] overflow-hidden">
+        
         <VideoSidebar videos={systemVideos} onSelectVideo={playSystemVideo} />
 
-        {/* Custom Video Player Viewport */}
-        <div className="lg:col-span-3 bg-black rounded-3xl overflow-hidden border border-white/10 relative group flex flex-col shadow-inner">
+        {/* Video Player remains dark internally because videos need a black canvas */}
+        <div className="lg:col-span-3 bg-black rounded-[1.5rem] overflow-hidden border border-slate-200 dark:border-white/10 relative group flex flex-col shadow-inner">
           
-          {/* Transcoding Loader Overlay */}
           {isTranscoding && (
-            <div className="absolute inset-0 z-30 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center gap-3">
-              <Loader2 size={36} className="text-rose-500 animate-spin" />
-              <p className="text-xs font-mono text-zinc-300">Optimizing codecs for custom player...</p>
+            <div className="absolute inset-0 z-30 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center gap-[0.75rem]">
+              <Loader2 className="w-[2.25rem] h-[2.25rem] text-rose-500 animate-spin" />
+              <p className="text-[0.75em] font-mono text-zinc-300">Optimizing codecs for custom player...</p>
             </div>
           )}
 
@@ -174,22 +165,15 @@ export default function VideoPlayer() {
             className="w-full h-full object-contain cursor-pointer flex-1"
           />
 
-          <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 pointer-events-none z-20">
-            <Sparkles size={14} className="text-rose-400" />
-            <span className="text-xs font-medium text-zinc-200 truncate max-w-sm">{videoTitle}</span>
+          <div className="absolute top-[1rem] left-[1rem] bg-black/60 backdrop-blur-md px-[1rem] py-[0.5rem] rounded-[1rem] border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-[0.5rem] pointer-events-none z-20">
+            <Sparkles className="w-[0.9rem] h-[0.9rem] text-rose-400 shrink-0" />
+            <span className="text-[0.75em] font-medium text-zinc-200 truncate max-w-[20rem]">{videoTitle}</span>
           </div>
 
           <VideoControls 
-            isPlaying={isPlaying}
-            progress={progress}
-            volume={volume}
-            isMuted={isMuted}
-            onTogglePlay={togglePlay}
-            onSeek={handleSeek}
-            onSkipTime={handleSkipTime}
-            onVolumeChange={handleVolumeChange}
-            onToggleMute={() => setIsMuted(!isMuted)}
-            onFullscreen={toggleFullscreen}
+            isPlaying={isPlaying} progress={progress} volume={volume} isMuted={isMuted}
+            onTogglePlay={togglePlay} onSeek={handleSeek} onSkipTime={handleSkipTime}
+            onVolumeChange={handleVolumeChange} onToggleMute={() => setIsMuted(!isMuted)} onFullscreen={toggleFullscreen}
           />
         </div>
       </div>

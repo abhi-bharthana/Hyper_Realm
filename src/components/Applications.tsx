@@ -17,17 +17,18 @@ export const Applications = () => {
     { id: 'hyper-media', name: 'Video', icon: <Video /> },
   ];
 
-  // Dynamic grid mapping
+  // Dynamic grid mapping scaled with 'rem' for UI synchronization
   const gridGaps = {
-    tight: 'gap-x-4 sm:gap-x-6 gap-y-6',
-    normal: 'gap-x-8 sm:gap-x-12 gap-y-12',
-    relaxed: 'gap-x-12 sm:gap-x-20 gap-y-16',
+    tight: 'gap-x-[1rem] sm:gap-x-[1.5rem] gap-y-[1.5rem]',
+    normal: 'gap-x-[2rem] sm:gap-x-[3rem] gap-y-[3rem]',
+    relaxed: 'gap-x-[3rem] sm:gap-x-[5rem] gap-y-[4rem]',
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-start justify-start pt-4 sm:pt-6">
-      <div className="w-full max-w-5xl flex overflow-x-auto hide-scrollbar pb-8">
-        <div className="min-w-full h-auto flex justify-start px-4 pt-6">
+    // Padding and max-width shifted to rem units
+    <div className="w-full h-full flex flex-col items-start justify-start pt-[1rem] sm:pt-[1.5rem]">
+      <div className="w-full max-w-[64rem] flex overflow-x-auto hide-scrollbar pb-[2rem]">
+        <div className="min-w-full h-auto flex justify-start px-[1rem] pt-[1.5rem]">
           
           {/* Grid setup mapped with appGridSpacing state */}
           <div className={`flex flex-wrap justify-start h-max w-full ${gridGaps[appGridSpacing]}`}>

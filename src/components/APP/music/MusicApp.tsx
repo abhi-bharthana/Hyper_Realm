@@ -17,7 +17,7 @@ export default function MusicApp() {
         />
       )}
       
-      {/* Left Side: Modular Player */}
+      {/* Left Side: Modular Player (Pehle hi tight kar diya tha) */}
       <MusicPlayerUI />
       
       {/* Right Side: Modular Library */}
