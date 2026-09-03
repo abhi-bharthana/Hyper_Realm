@@ -1,4 +1,3 @@
-// BAAKI IMPORTS WAHI RAHENGE...
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { invoke } from '@tauri-apps/api/core';
@@ -19,7 +18,7 @@ interface AppState {
   apps: SystemAppExtended[];
   theme: 'light' | 'dark' | 'system';
   activeTab: string;
-  uiDensity: 'ultra' | 'compact' | 'normal' | 'spacious'; // Kept for legacy fallback
+  uiDensity: 'ultra' | 'compact' | 'normal' | 'spacious';
   isSidebarCollapsed: boolean;
   userName: string;
   userTitle: string;
@@ -131,12 +130,17 @@ export const useAppStore = create<AppState>()(
       setEyeCareIntensity: (eyeCareIntensity) => set({ eyeCareIntensity }),
 
       launchApp: async (id) => {
-        const appToLaunch = get().apps.find(a => a.id === id);
-        if (!appToLaunch) return;
-        set((state) => ({ apps: state.apps.map(app => app.id === id ? { ...app, status: 'running', mode: 'balanced' } : app) }));
+        // 🚀 ROUTE CHECKS PLACED AT THE TOP (Fixed blockage bug)
         if (id === 'hyper-surf') { set({ activeTab: 'Hyper-Surf' }); return; }
         if (id === 'hyper-media') { set({ activeTab: 'Hyper-Media' }); return; }
         if (id === 'hyper-music') { set({ activeTab: 'Music' }); return; }
+        if (id === 'hyper-recorder') { set({ activeTab: 'AI Recorder' }); return; }
+
+        const appToLaunch = get().apps.find(a => a.id === id);
+        if (!appToLaunch) return;
+        
+        set((state) => ({ apps: state.apps.map(app => app.id === id ? { ...app, status: 'running', mode: 'balanced' } : app) }));
+
         try {
           const response: string = await invoke('launch_executable', { id: appToLaunch.id, path: appToLaunch.executable_path });
           const pidMatch = response.match(/PID: (\d+)/);
@@ -158,7 +162,8 @@ export const useAppStore = create<AppState>()(
         const { activeTab } = get();
         if ((id === 'hyper-surf' && activeTab === 'Hyper-Surf') || 
             (id === 'hyper-media' && activeTab === 'Hyper-Media') || 
-            (id === 'hyper-music' && activeTab === 'Music')) {
+            (id === 'hyper-music' && activeTab === 'Music') ||
+            (id === 'hyper-recorder' && activeTab === 'AI Recorder')) {
            set({ activeTab: 'Applications' }); 
         }
         get().setAppIdle(id);

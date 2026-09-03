@@ -27,5 +27,14 @@ export const CORE_APPS: SystemAppExtended[] = [
     executable_path: 'internal://hyper-music',
     status: 'idle',
     mode: 'balanced'
+  },
+  {
+    id: 'hyper-recorder',
+    name: 'AI Recorder',
+    description: 'Performance-optimized voice recording and real-time modular STT engine.',
+    icon: 'Mic',
+    executable_path: 'internal://hyper-recorder',
+    status: 'idle',
+    mode: 'balanced'
   }
 ];

@@ -18,6 +18,7 @@ import Settings from './components/Settings';
 import WidgetsCore from './components/WidgetsCore';
 import HyperLinkView from './components/hyperlink/HyperLinkView'; 
 import { useAppStore } from './store/useAppStore';
+import { RecorderApp } from './components/APP/recorder/RecorderApp';
 
 export default function App() {
   const { 
@@ -105,7 +106,7 @@ export default function App() {
   };
 
   const isHome = activeTab === 'Home';
-  const isAppView = ['Hyper-Surf', 'Hyper-Media', 'Music'].includes(activeTab);
+  const isAppView = ['Hyper-Surf', 'Hyper-Media', 'Music', 'AI Recorder'].includes(activeTab);
   const isFullscreenView = isHome || isAppView;
   const showCustomBg = isHome && homeBackgroundType !== 'default';
 
@@ -201,6 +202,7 @@ export default function App() {
           {activeTab === 'Hyper-Link' && <HyperLinkView />} 
           {activeTab === 'Widgets Core' && <WidgetsCore />}
           {activeTab === 'Hyper-Media' && <VideoPlayer />}
+          {activeTab === 'AI Recorder' && <RecorderApp />}
           {activeTab === 'Music' && <MusicApp />} 
           {activeTab === 'Processes' && <Processes />}
           {activeTab === 'Battery' && <Battery />}
