@@ -24,7 +24,6 @@ export default function App() {
   const { 
     environmentName, theme, activeTab, setActiveTab, setAppIdle, 
     homeBackgroundType, homeBackgroundValue,
-    // === NAYE STATES IMPORT KIYE ===
     globalFontFamily, uiScale, textScale, isEyeCareEnabled, eyeCareIntensity 
   } = useAppStore();
 
@@ -59,7 +58,6 @@ export default function App() {
 
     applyTheme(theme);
 
-    // Live listener for OS theme switch
     const handleSystemThemeChange = () => {
       if (useAppStore.getState().theme === 'system') {
         applyTheme('system');
@@ -107,7 +105,10 @@ export default function App() {
 
   const isHome = activeTab === 'Home';
   const isAppView = ['Hyper-Surf', 'Hyper-Media', 'Music', 'AI Recorder'].includes(activeTab);
-  const isFullscreenView = isHome || isAppView;
+  
+  // 🔥 THE FIX: Added 'Node Settings' to isFullscreenView to remove the strict p-[1.5em] boundary
+  const isFullscreenView = isHome || isAppView || activeTab === 'Node Settings';
+  
   const showCustomBg = isHome && homeBackgroundType !== 'default';
 
   return (
@@ -125,19 +126,12 @@ export default function App() {
         } : {}
       }
     >
-{/* ======= TIGHT UI SCALING & FONT ENGINE ======= */}
+      {/* ======= TIGHT UI SCALING & FONT ENGINE ======= */}
       <style>{`
         :root {
-          /* UI Scale directly controls 1rem base (Boxes, Layouts, Toggles only) */
           font-size: ${14 * uiScale}px !important; 
           font-family: ${globalFontFamily};
         }
-        
-        /* 
-           FIXED TEXT ENGINE: 
-           Yeh sirf text classes ko target karega aur unhe 'rem' mein output dega.
-           Isse Text Slider sirf font badhayega, aur Toggles untouched rahenge!
-        */
         .text-\\[0\\.65em\\] { font-size: calc(0.65rem * ${textScale}) !important; }
         .text-\\[0\\.75em\\] { font-size: calc(0.75rem * ${textScale}) !important; }
         .text-\\[0\\.8em\\] { font-size: calc(0.8rem * ${textScale}) !important; }
@@ -149,25 +143,22 @@ export default function App() {
         .text-\\[1\\.5em\\] { font-size: calc(1.5rem * ${textScale}) !important; }
         .text-\\[1\\.75em\\] { font-size: calc(1.75rem * ${textScale}) !important; }
         .text-\\[1\\.8em\\] { font-size: calc(1.8rem * ${textScale}) !important; }
-        
-        /* Fallback for standard Tailwind classes */
         .text-xs { font-size: calc(0.75rem * ${textScale}) !important; }
         .text-sm { font-size: calc(0.875rem * ${textScale}) !important; }
         .text-base { font-size: calc(1rem * ${textScale}) !important; }
         .text-lg { font-size: calc(1.125rem * ${textScale}) !important; }
-      `}</style>      {/* ================================================= */}
+      `}</style>
 
       {/* ======= EYE CARE BLUELIGHT FILTER ======= */}
       {isEyeCareEnabled && (
         <div 
           className="fixed inset-0 z-[99999] pointer-events-none mix-blend-multiply transition-opacity duration-700"
           style={{ 
-            backgroundColor: '#ff8c00', // Warm amber/orange
+            backgroundColor: '#ff8c00', 
             opacity: eyeCareIntensity / 100 
           }}
         />
       )}
-      {/* ========================================= */}
 
       <GlobalAudioEngine />
       
@@ -180,10 +171,10 @@ export default function App() {
       
       <Sidebar />
       
-      {/* Fixed root padding with fallback scaling */}
+      {/* 🔥 FIX: Yahan p-0 apply hoga About/Settings page ke liye */}
       <main className={`flex-1 h-full flex flex-col overflow-hidden z-10 ${isFullscreenView ? 'p-0' : 'p-[1.5em] gap-[1em]'}`}>
         
-        {!isFullscreenView && activeTab !== 'Node Settings' && (
+        {!isFullscreenView && (
           <header className="flex-shrink-0 mb-[0.5em]">
             <h2 className="text-[1.8em] font-bold tracking-tight mb-[0.1em] transition-all duration-300">
               {activeTab === 'Dashboard' ? environmentName : activeTab}
