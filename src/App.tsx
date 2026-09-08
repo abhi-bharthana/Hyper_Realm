@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window'; 
-import Sidebar from './components/Sidebar';
+import { Sidebar } from './components/Sidebar';
 import Home from './components/home/Home';
 import Dashboard from './components/Dashboard';
 import { Applications } from './components/Applications';
@@ -18,6 +18,7 @@ import Settings from './components/Settings';
 import WidgetsCore from './components/WidgetsCore';
 import HyperLinkView from './components/hyperlink/HyperLinkView'; 
 import { useAppStore } from './store/useAppStore';
+import { useSidebarStore } from './store/useSidebarStore'; 
 import { RecorderApp } from './components/APP/recorder/RecorderApp';
 
 export default function App() {
@@ -27,7 +28,8 @@ export default function App() {
     globalFontFamily, uiScale, textScale, isEyeCareEnabled, eyeCareIntensity 
   } = useAppStore();
 
-  // 1. Process Lifecycle Listener
+  const { isSidebarCollapsed, isSidebarAutoHide } = useSidebarStore();
+
   useEffect(() => {
     let unlisten: Promise<() => void>;
     try {
@@ -42,7 +44,6 @@ export default function App() {
     if (!activeTab) setActiveTab('Home');
   }, [activeTab, setActiveTab]);
 
-  // 2. TIGHT THEME CONTROLLER (Live OS Sync)
   useEffect(() => {
     const root = window.document.documentElement;
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -68,7 +69,6 @@ export default function App() {
     return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
   }, [theme]);
 
-  // 3. Fullscreen Keybinds
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
       if (e.key === 'F11' || (e.key === 'Enter' && e.altKey)) {
@@ -106,7 +106,6 @@ export default function App() {
   const isHome = activeTab === 'Home';
   const isAppView = ['Hyper-Surf', 'Hyper-Media', 'Music', 'AI Recorder'].includes(activeTab);
   
-  // 🔥 THE FIX: Added 'Node Settings' to isFullscreenView to remove the strict p-[1.5em] boundary
   const isFullscreenView = isHome || isAppView || activeTab === 'Node Settings';
   
   const showCustomBg = isHome && homeBackgroundType !== 'default';
@@ -126,7 +125,6 @@ export default function App() {
         } : {}
       }
     >
-      {/* ======= TIGHT UI SCALING & FONT ENGINE ======= */}
       <style>{`
         :root {
           font-size: ${14 * uiScale}px !important; 
@@ -149,7 +147,6 @@ export default function App() {
         .text-lg { font-size: calc(1.125rem * ${textScale}) !important; }
       `}</style>
 
-      {/* ======= EYE CARE BLUELIGHT FILTER ======= */}
       {isEyeCareEnabled && (
         <div 
           className="fixed inset-0 z-[99999] pointer-events-none mix-blend-multiply transition-opacity duration-700"
@@ -169,9 +166,23 @@ export default function App() {
         </>
       )}
       
-      <Sidebar />
+      {/* 🔥 FLOATING SIDEBAR WRAPPER */}
+      <div 
+        className={`transition-all duration-500 ease-in-out z-[99] flex-shrink-0 h-full py-[1.5em] pl-[1.5em]
+          ${isSidebarCollapsed ? 'w-[5.5rem]' : 'w-64'} 
+          ${isSidebarAutoHide 
+              ? 'absolute left-0 -translate-x-[calc(100%-4px)] hover:translate-x-0' 
+              : 'relative translate-x-0'
+           }
+        `}
+      >
+        {isSidebarAutoHide && (
+          <div className="absolute top-0 right-0 w-8 h-full bg-transparent cursor-pointer z-[-1]" />
+        )}
+        
+        <Sidebar />
+      </div>
       
-      {/* 🔥 FIX: Yahan p-0 apply hoga About/Settings page ke liye */}
       <main className={`flex-1 h-full flex flex-col overflow-hidden z-10 ${isFullscreenView ? 'p-0' : 'p-[1.5em] gap-[1em]'}`}>
         
         {!isFullscreenView && (

@@ -1,9 +1,9 @@
 import React from 'react';
 import { Cpu } from 'lucide-react';
-import { useAppStore } from '../../store/useAppStore';
+import { useSidebarStore } from '../../store/useSidebarStore'; // 🔥 Fetch from new store
 
 export function SidebarBottom() {
-  const { isSidebarCollapsed } = useAppStore();
+  const { isSidebarCollapsed } = useSidebarStore(); // 🔥 Correct state source
 
   return (
     <div className={`mt-3 rounded-2xl bg-white/50 dark:bg-black/50 border border-white/40 dark:border-white/5 flex items-center transition-all duration-[400ms] overflow-hidden ${

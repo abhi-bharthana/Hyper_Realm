@@ -19,7 +19,6 @@ interface AppState {
   theme: 'light' | 'dark' | 'system';
   activeTab: string;
   uiDensity: 'ultra' | 'compact' | 'normal' | 'spacious';
-  isSidebarCollapsed: boolean;
   userName: string;
   userTitle: string;
   userAvatar: string;
@@ -34,7 +33,6 @@ interface AppState {
   appIconSize: 'small' | 'medium' | 'large';
   appGridSpacing: 'tight' | 'normal' | 'relaxed';
   showAppNames: boolean;
-  isSidebarAutoHide: boolean;
 
   // ==== NAYE UI ENGINE STATES ====
   globalFontFamily: string;
@@ -44,7 +42,6 @@ interface AppState {
   eyeCareIntensity: number; // 0 to 100
   
   setUiDensity: (density: 'ultra' | 'compact' | 'normal' | 'spacious') => void;
-  toggleSidebar: () => void;
   updateProfile: (name: string, title: string) => void;
   updateAvatar: (avatarDataUrl: string) => void;
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
@@ -62,7 +59,6 @@ interface AppState {
   setAppIconSize: (size: 'small' | 'medium' | 'large') => void;
   setAppGridSpacing: (spacing: 'tight' | 'normal' | 'relaxed') => void;
   setShowAppNames: (show: boolean) => void;
-  setSidebarAutoHide: (autoHide: boolean) => void;
 
   // ==== NAYE SETTERS ====
   setGlobalFontFamily: (font: string) => void;
@@ -80,7 +76,6 @@ export const useAppStore = create<AppState>()(
       theme: 'system',
       activeTab: 'Home',
       uiDensity: 'normal',
-      isSidebarCollapsed: false,
       userName: 'Hyper User',
       userTitle: 'Node Administrator',
       userAvatar: '',
@@ -95,7 +90,6 @@ export const useAppStore = create<AppState>()(
       appIconSize: 'medium',
       appGridSpacing: 'normal',
       showAppNames: true,
-      isSidebarAutoHide: false, 
 
       // ==== DEFAULT UI ENGINE VALUES ====
       globalFontFamily: 'sans-serif',
@@ -105,7 +99,6 @@ export const useAppStore = create<AppState>()(
       eyeCareIntensity: 30,
       
       setUiDensity: (uiDensity) => set({ uiDensity }),
-      toggleSidebar: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
       updateProfile: (userName, userTitle) => set({ userName, userTitle }),
       updateAvatar: (userAvatar) => set({ userAvatar }),
       setTheme: (theme) => set({ theme }),
@@ -120,7 +113,6 @@ export const useAppStore = create<AppState>()(
       setAppIconSize: (appIconSize) => set({ appIconSize }),
       setAppGridSpacing: (appGridSpacing) => set({ appGridSpacing }),
       setShowAppNames: (showAppNames) => set({ showAppNames }),
-      setSidebarAutoHide: (isSidebarAutoHide) => set({ isSidebarAutoHide }),
 
       // ==== NEW SETTERS CONFIG ====
       setGlobalFontFamily: (globalFontFamily) => set({ globalFontFamily }),

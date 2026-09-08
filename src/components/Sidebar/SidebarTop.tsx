@@ -1,9 +1,11 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight, Zap } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
+import { useSidebarStore } from '../../store/useSidebarStore'; // 🔥 Added SidebarStore
 
 export function SidebarTop() {
-  const { isSidebarCollapsed, toggleSidebar, setActiveTab } = useAppStore();
+  const { setActiveTab } = useAppStore();
+  const { isSidebarCollapsed, toggleSidebar } = useSidebarStore(); // 🔥 From new store
 
   return (
     <div className="flex flex-col items-center w-full mb-6">
