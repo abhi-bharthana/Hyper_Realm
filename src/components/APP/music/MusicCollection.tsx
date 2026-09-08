@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { audioDir } from '@tauri-apps/api/path'; // 🔥 Naya Import for Auto-Scan
 import { FolderSearch, History, ListMusic, Volume2, HardDrive, Trash2, Loader2, RefreshCw, FolderCog, Plus, List, MoreVertical, X, FolderPlus, Heart, ListOrdered, ChevronUp, ChevronDown } from 'lucide-react';
 import { open } from '@tauri-apps/plugin-dialog';
 import { useMusicStore, Track, PlaylistData } from '../../../store/useMusicStore';
@@ -73,6 +74,52 @@ export default function MusicCollection() {
     } catch (error) { setIsScanning(false); }
   };
 
+// 🔥 MOBILE & PC FRIENDLY UNIVERSAL SCANNER
+  const handleAutoScan = async () => {
+    try {
+      setIsScanning(true);
+      
+      // Mobile par folder picker kaam nahi karta, isliye hum File Picker use karenge
+      const selected = await open({
+        directory: false,    // False taaki mobile par crash na ho
+        multiple: true,      // Multiple gaane select kar sakein
+        filters: [{ 
+          name: 'Audio', 
+          extensions: ['mp3', 'wav', 'flac', 'm4a'] 
+        }]
+      });
+
+      if (selected) {
+        // Agar single string aayi ya array aaya, dono ko handle karenge
+        const files = Array.isArray(selected) ? selected : [selected];
+        
+        if (files.length > 0) {
+          // 🔥 Jaadu: User ne jo gaana select kiya, uska parent folder nikal lo
+          const firstFile = files[0];
+          const lastSlash = Math.max(firstFile.lastIndexOf('/'), firstFile.lastIndexOf('\\'));
+          const parentDir = firstFile.substring(0, lastSlash);
+
+          console.log("📂 Auto-detected Folder from file:", parentDir);
+          
+          addDirectory(parentDir);
+          const tracks = await scanNativeDirectory(parentDir);
+          
+          if (tracks.length > 0) {
+            const mergedTracks = [...playlist, ...tracks.filter(newTrack => !playlist.some(p => p.path === newTrack.path))];
+            setPlaylist(mergedTracks);
+            console.log(`🎵 Loaded ${tracks.length} tracks successfully!`);
+          } else {
+            alert("Folder mil gaya par koi MP3 track nahi mila!");
+          }
+        }
+      }
+      setIsScanning(false);
+    } catch (error) { 
+      console.error("Scan Error:", error);
+      setIsScanning(false); 
+    }
+  };
+
   const handleCreatePlaylist = () => {
     const name = prompt("Enter Playlist Name:");
     if (name) createPlaylist(name);
@@ -91,7 +138,7 @@ export default function MusicCollection() {
   }
 
   return (
-    <div className="w-full md:w-[22rem] shrink-0 bg-slate-100/50 dark:bg-black/20 backdrop-blur-3xl border-t md:border-t-0 md:border-l border-slate-200 dark:border-white/5 flex flex-col relative z-10 h-1/2 md:h-full transition-all">
+    <div className="w-full h-full flex flex-col relative z-10 transition-all bg-transparent">
       
       {/* HEADER SECTION */}
       <div className="p-[1.25rem] border-b border-slate-200 dark:border-white/5 flex flex-col gap-[1rem] shrink-0">
@@ -131,11 +178,19 @@ export default function MusicCollection() {
       {/* SCROLLABLE LIST SECTION */}
       <div className={`flex-1 overflow-y-auto p-[0.75rem] custom-scrollbar ${queue.length > 0 ? 'pb-[4rem]' : ''}`}>
         
+        {/* 🔥 UPDATED FOLDERS VIEW 🔥 */}
         {activeView === 'folders' && (
           <div className="flex flex-col gap-[0.75rem]">
-            <button onClick={handleNativeFolderSelect} disabled={isScanning} className="flex items-center justify-center gap-[0.5rem] px-[0.75rem] py-[0.75rem] bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-[0.85em] font-bold rounded-[0.75rem] border border-blue-500/20 transition-all">
-              {isScanning ? <Loader2 className="w-[1.2rem] h-[1.2rem] animate-spin" /> : <FolderPlus className="w-[1.2rem] h-[1.2rem]" />} {isScanning ? 'Scanning...' : 'Sync New Folder'}
+            {/* 1. Android Auto Scan Button */}
+            <button onClick={handleAutoScan} disabled={isScanning} className="flex items-center justify-center gap-[0.5rem] px-[0.75rem] py-[0.75rem] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[0.85em] font-bold rounded-[0.75rem] border border-emerald-500/20 transition-all">
+              {isScanning ? <Loader2 className="w-[1.2rem] h-[1.2rem] animate-spin" /> : <FolderPlus className="w-[1.2rem] h-[1.2rem]" />} {isScanning ? 'Scanning...' : '✨ Auto-Scan Phone Audio'}
             </button>
+
+            {/* 2. Manual Folder Select (PC) */}
+            <button onClick={handleNativeFolderSelect} disabled={isScanning} className="flex items-center justify-center gap-[0.5rem] px-[0.75rem] py-[0.75rem] bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-[0.85em] font-bold rounded-[0.75rem] border border-blue-500/20 transition-all">
+              <FolderCog className="w-[1.2rem] h-[1.2rem]" /> Manual Select
+            </button>
+
             {savedDirectories.map(dir => (
               <div key={dir} className="flex items-center justify-between bg-white/60 dark:bg-white/5 p-[0.75rem] rounded-[0.75rem] border border-slate-200 dark:border-white/5">
                 <div className="flex items-center gap-[0.75rem] overflow-hidden">

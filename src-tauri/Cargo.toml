@@ -12,7 +12,6 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
-
 [dependencies]
 tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-opener = "2"
@@ -26,8 +25,6 @@ rand = "=0.8.8"
 rand_core = "=0.6.4"
 rand_distr = "=0.4.3"
 
-# 🔋 Battery hardware support
-battery = "0.7"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 id3 = "1.17.1"
@@ -49,15 +46,18 @@ parking_lot = "0.12"
 crossbeam-channel = "0.5"
 chrono = "0.4"
 
-# 🧠 AI Runtime (Pure Rust - No C++)
-candle-core = "0.8.4"
-candle-nn = "0.8.4"
-candle-transformers = "0.8.4"
-tokenizers = "0.20.4"
-hf-hub = "0.3.2"
-safetensors = "0.4.5"
+# 🧠 AI Runtime
+candle-core = { version = "0.8.4", optional = true }
+candle-nn = { version = "0.8.4", optional = true }
+candle-transformers = { version = "0.8.4", optional = true }
+safetensors = { version = "0.4.5", optional = true }
+tokenizers = { version = "0.20.4", default-features = false, optional = true }
+hf-hub = { version = "0.3.2", default-features = false, features = ["tokio"], optional = true }
 
-# 🚀 ARM & BATTERY OPTIMIZATIONS (Release Build)
+# 🔥 THE FIX: Battery crate sirf Desktop (Windows/Linux/Mac) par load hoga
+[target.'cfg(not(target_os = "android"))'.dependencies]
+battery = "0.7"
+
 [profile.release]
 codegen-units = 1
 lto = true
@@ -66,8 +66,15 @@ strip = true
 panic = "abort"
 
 [features]
-default = ["music-app", "video-app", "browser-app", "recorder-app"]
+default = ["music-app", "video-app", "browser-app"]
 music-app = []
 video-app = []
 browser-app = []
-recorder-app = []
+recorder-app = [
+    "candle-core",
+    "candle-nn",
+    "candle-transformers",
+    "safetensors",
+    "tokenizers",
+    "hf-hub"
+]

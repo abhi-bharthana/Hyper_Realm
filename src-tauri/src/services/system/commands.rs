@@ -1,5 +1,4 @@
 use serde::Serialize;
-use std::process::Command;
 use tauri::State;
 
 // 🚀 Naye paths: Ab core aur models ki jagah services::system use hoga
@@ -21,7 +20,7 @@ pub fn get_system_info(state: State<'_, SysState>) -> SystemInfo {
     sys.refresh_memory();
 
     SystemInfo {
-        os_name: sysinfo::System::name().unwrap_or_else(|| "Windows 11 ARM".to_string()),
+        os_name: sysinfo::System::name().unwrap_or_else(|| "Unknown OS".to_string()),
         os_version: sysinfo::System::os_version().unwrap_or_else(|| "Unknown".to_string()),
         cpu_name: sys
             .cpus()
@@ -65,6 +64,8 @@ pub fn get_processes(state: State<'_, SysState>) -> Vec<ProcessData> {
 pub fn get_battery_info() -> BatteryData {
     #[cfg(target_os = "windows")]
     {
+        // 🔥 IMPORT FIX: Ise sirf Windows scope ke andar import kiya
+        use std::process::Command; 
         let output = Command::new("powershell")
             .args(&[
                 "-NoProfile",
@@ -96,6 +97,7 @@ pub fn get_battery_info() -> BatteryData {
         }
     }
 
+    // 🔥 Default state for Android (Phone pe app crash hone se bachayega)
     BatteryData {
         percentage: 100.0,
         state: "AC Power / Connected".to_string(),
@@ -106,13 +108,14 @@ pub fn get_battery_info() -> BatteryData {
 pub fn set_power_mode(mode: String) -> Result<String, String> {
     #[cfg(target_os = "windows")]
     {
+        use std::process::Command; // 🔥 Import Fix
         let guid = match mode.as_str() {
             "power_saver" => "a1841308-3541-4fab-bc81-f71556f20b4a",
             "high_performance" => "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
             _ => "381b4222-f694-41f0-9685-ff5bb260df2e", // Balanced
         };
 
-        let output = std::process::Command::new("powercfg")
+        let output = Command::new("powercfg")
             .args(&["/SetActive", guid])
             .output();
 

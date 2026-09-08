@@ -1,12 +1,14 @@
 import fs from 'fs';
-import { spawn } from 'child_process';
+import { spawn, execSync } from 'child_process';
 import path from 'path';
 
+// 🚀 Naye Arguments
 const appName = process.argv[2]; 
-const mode = process.argv[3] || 'dev'; 
+const action = process.argv[3] || 'dev'; 
+const platform = process.argv[4] || 'desktop'; 
 
 if (!appName) {
-  console.error("❌ Please provide an app name! Example: npm run app:dev music");
+  console.error("❌ Please provide an app name! Example: node scripts/build.js video build android");
   process.exit(1);
 }
 
@@ -19,14 +21,13 @@ if (!config) {
   process.exit(1);
 }
 
-// Default version agar manifest mein miss ho jaye
 const appVersion = config.version || "1.0.0";
-console.log(`🚀 Starting ${config.name} (v${appVersion}) in ${mode} mode...`);
+console.log(`🚀 Starting ${config.name} (v${appVersion}) for ${platform.toUpperCase()} in ${action.toUpperCase()} mode...`);
 
 const baseTauriConfig = {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": config.name,
-  "version": appVersion, // 🔥 Version ab yahan se uthega
+  "version": appVersion,
   "identifier": config.identifier,
   "build": {
     "beforeDevCommand": `cross-env VITE_APP_TARGET=${appName} VITE_SERVER_PORT=${config.port} vite`,
@@ -49,13 +50,6 @@ const configPath = path.resolve(`src-tauri/tauri.${appName}.conf.json`);
 fs.writeFileSync(configPath, JSON.stringify(baseTauriConfig, null, 2));
 
 const tauriCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-const tauriArgs = [
-  'tauri', mode, 
-  '--config', `src-tauri/tauri.${appName}.conf.json`,
-  '--features', config.featureFlag,
-  '--', '--no-default-features'
-];
-
 const env = { 
   ...process.env, 
   HYPER_PORT: config.port.toString(),
@@ -63,45 +57,111 @@ const env = {
   VITE_SERVER_PORT: config.port.toString()
 };
 
+// 🔥 NAYA JAADU: Android Folder Auto-Sync 🔥
+// Yeh logic check karega ki naye app ka package folder bana hai ya nahi.
+if (platform === 'android') {
+  const packagePath = config.identifier.split('.').join('/'); // "com.abhi.music" -> "com/abhi/music"
+  const expectedDir = path.resolve(`src-tauri/gen/android/app/src/main/java/${packagePath}`);
+  
+  if (!fs.existsSync(expectedDir)) {
+    console.log(`\n🔄 App switch detected! Rebuilding Android structure for '${config.identifier}'...`);
+    
+    const genDir = path.resolve('src-tauri/gen/android');
+    if (fs.existsSync(genDir)) {
+      fs.rmSync(genDir, { recursive: true, force: true });
+    }
+    
+    try {
+      execSync(`${tauriCmd} tauri android init --config src-tauri/tauri.${appName}.conf.json`, { stdio: 'inherit', env });
+      console.log(`✅ Android structure re-initialized!\n`);
+    } catch (e) {
+      console.error(`❌ Failed to initialize Android structure.`);
+      process.exit(1);
+    }
+  }
+}
+
+// Command setup
+let tauriArgs = ['tauri'];
+if (platform === 'android') {
+  tauriArgs.push('android');
+}
+tauriArgs.push(action, '--config', `src-tauri/tauri.${appName}.conf.json`, '--features', config.featureFlag, '--', '--no-default-features');
+
 const child = spawn(tauriCmd, tauriArgs, { 
   env, 
   stdio: 'inherit',
-  shell: true 
+  shell: process.platform === 'win32' // Warning fix
 });
 
+// 📂 Recursive file finder helper
+function findFiles(dir, ext, fileList = []) {
+  if (fs.existsSync(dir)) {
+    const files = fs.readdirSync(dir);
+    for (const file of files) {
+      const filePath = path.join(dir, file);
+      if (fs.statSync(filePath).isDirectory()) {
+        findFiles(filePath, ext, fileList);
+      } else if (filePath.endsWith(ext)) {
+        fileList.push(filePath);
+      }
+    }
+  }
+  return fileList;
+}
+
 child.on('close', (code) => {
-  console.log(`✅ Process exited with code ${code}`);
+  console.log(`\n✅ Process exited with code ${code}`);
   
-  // 🔥 THE MAGIC: Agar build mode tha aur successful raha, toh files organize karo!
-  if (mode === 'build' && code === 0) {
-    console.log(`📦 Organizing release files for ${config.name}...`);
+  if (action === 'build' && code === 0) {
+    console.log(`📦 Organizing release files for ${config.name} (${platform.toUpperCase()})...`);
     
-    // Naya folder structure: releases/HyperVideo/v1.0.0/
-    const releaseDir = path.resolve(`releases/${config.name}/v${appVersion}`);
+    const releaseDir = path.resolve(`releases/${config.name}/v${appVersion}/${platform}`);
     if (!fs.existsSync(releaseDir)) {
       fs.mkdirSync(releaseDir, { recursive: true });
     }
 
-    const tauriTarget = path.resolve('src-tauri/target/release');
-    
-    // 1. Direct Portable EXE copy karna
-    const rawExe = path.join(tauriTarget, `${config.name}.exe`);
-    if (fs.existsSync(rawExe)) {
-      fs.copyFileSync(rawExe, path.join(releaseDir, `${config.name}-Portable.exe`));
-      console.log(`   -> Copied Portable Exe`);
-    }
-
-    // 2. Setup Installer (NSIS) copy karna
-    const bundleDir = path.join(tauriTarget, 'bundle', 'nsis');
-    if (fs.existsSync(bundleDir)) {
-      const files = fs.readdirSync(bundleDir);
-      const setupFile = files.find(f => f.startsWith(config.name) && f.endsWith('-setup.exe'));
-      if (setupFile) {
-        fs.copyFileSync(path.join(bundleDir, setupFile), path.join(releaseDir, setupFile));
-        console.log(`   -> Copied Installer Setup`);
+    if (platform === 'desktop') {
+      const tauriTarget = path.resolve('src-tauri/target/release');
+      
+      const rawExe = path.join(tauriTarget, `${config.name}.exe`);
+      if (fs.existsSync(rawExe)) {
+        fs.copyFileSync(rawExe, path.join(releaseDir, `${config.name}-Portable.exe`));
+        console.log(`   -> Copied Desktop Portable Exe`);
       }
+
+      const bundleDir = path.join(tauriTarget, 'bundle', 'nsis');
+      if (fs.existsSync(bundleDir)) {
+        const files = fs.readdirSync(bundleDir);
+        const setupFile = files.find(f => f.startsWith(config.name) && f.endsWith('-setup.exe'));
+        if (setupFile) {
+          fs.copyFileSync(path.join(bundleDir, setupFile), path.join(releaseDir, setupFile));
+          console.log(`   -> Copied Desktop Installer Setup`);
+        }
+      }
+    } 
+    else if (platform === 'android') {
+       // Android folders jahan APK aur AAB bante hain
+       const apkDir = path.resolve('src-tauri/gen/android/app/build/outputs/apk');
+       const aabDir = path.resolve('src-tauri/gen/android/app/build/outputs/bundle');
+       
+       const apkFiles = findFiles(apkDir, '.apk');
+       apkFiles.forEach(file => {
+          const fileName = path.basename(file);
+          const newName = `${config.name}-v${appVersion}-${fileName}`;
+          fs.copyFileSync(file, path.join(releaseDir, newName));
+          console.log(`   -> Copied APK: ${newName}`);
+       });
+
+       const aabFiles = findFiles(aabDir, '.aab');
+       aabFiles.forEach(file => {
+          const fileName = path.basename(file);
+          const newName = `${config.name}-v${appVersion}-${fileName}`;
+          fs.copyFileSync(file, path.join(releaseDir, newName));
+          console.log(`   -> Copied AAB (PlayStore Bundle): ${newName}`);
+       });
     }
     
-    console.log(`🎉 Build successfully saved to: ${releaseDir}`);
+    console.log(`\n🎉 Build successfully saved to: ${releaseDir}`);
   }
 });
