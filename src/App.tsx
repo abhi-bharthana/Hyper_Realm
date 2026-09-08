@@ -86,6 +86,57 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // =========================================================================
+  // 🔥 SMART MANIFEST ROUTING: Isolates the specific app based on Vite Env
+  // =========================================================================
+  const appTarget = import.meta.env.VITE_APP_TARGET;
+
+  if (appTarget) {
+    return (
+      <div className="h-screen w-screen overflow-hidden flex relative font-sans selection:bg-blue-500/30 transition-all duration-700 ease-in-out bg-slate-50 dark:bg-[#0a0a0c] text-slate-900 dark:text-zinc-100">
+        <style>{`
+          :root {
+            font-size: ${14 * uiScale}px !important; 
+            font-family: ${globalFontFamily};
+          }
+          .text-\\[0\\.65em\\] { font-size: calc(0.65rem * ${textScale}) !important; }
+          .text-\\[0\\.75em\\] { font-size: calc(0.75rem * ${textScale}) !important; }
+          .text-\\[0\\.8em\\] { font-size: calc(0.8rem * ${textScale}) !important; }
+          .text-\\[0\\.85em\\] { font-size: calc(0.85rem * ${textScale}) !important; }
+          .text-\\[0\\.9em\\] { font-size: calc(0.9rem * ${textScale}) !important; }
+          .text-\\[0\\.95em\\] { font-size: calc(0.95rem * ${textScale}) !important; }
+          .text-\\[1em\\] { font-size: calc(1rem * ${textScale}) !important; }
+          .text-\\[1\\.1em\\] { font-size: calc(1.1rem * ${textScale}) !important; }
+          .text-\\[1\\.5em\\] { font-size: calc(1.5rem * ${textScale}) !important; }
+          .text-\\[1\\.75em\\] { font-size: calc(1.75rem * ${textScale}) !important; }
+          .text-\\[1\\.8em\\] { font-size: calc(1.8rem * ${textScale}) !important; }
+          .text-xs { font-size: calc(0.75rem * ${textScale}) !important; }
+          .text-sm { font-size: calc(0.875rem * ${textScale}) !important; }
+          .text-base { font-size: calc(1rem * ${textScale}) !important; }
+          .text-lg { font-size: calc(1.125rem * ${textScale}) !important; }
+        `}</style>
+
+        {isEyeCareEnabled && (
+          <div 
+            className="fixed inset-0 z-[99999] pointer-events-none mix-blend-multiply transition-opacity duration-700"
+            style={{ backgroundColor: '#ff8c00', opacity: eyeCareIntensity / 100 }}
+          />
+        )}
+
+        {/* Load specific app dynamically */}
+        {appTarget === 'music' && (
+          <>
+            <GlobalAudioEngine />
+            <MusicApp />
+          </>
+        )}
+        {appTarget === 'video' && <VideoPlayer />}
+        {appTarget === 'recorder' && <RecorderApp />}
+      </div>
+    );
+  }
+  // =========================================================================
+
   const getHeaderDescription = () => {
     switch (activeTab) {
       case 'Applications': return "Select an environment module to launch into isolated space.";
@@ -150,13 +201,11 @@ export default function App() {
       {isEyeCareEnabled && (
         <div 
           className="fixed inset-0 z-[99999] pointer-events-none mix-blend-multiply transition-opacity duration-700"
-          style={{ 
-            backgroundColor: '#ff8c00', 
-            opacity: eyeCareIntensity / 100 
-          }}
+          style={{ backgroundColor: '#ff8c00', opacity: eyeCareIntensity / 100 }}
         />
       )}
 
+      {/* Main dashboard audio engine (Background play) */}
       <GlobalAudioEngine />
       
       {!showCustomBg && !isAppView && (
@@ -166,7 +215,6 @@ export default function App() {
         </>
       )}
       
-      {/* 🔥 FLOATING SIDEBAR WRAPPER */}
       <div 
         className={`transition-all duration-500 ease-in-out z-[99] flex-shrink-0 h-full py-[1.5em] pl-[1.5em]
           ${isSidebarCollapsed ? 'w-[5.5rem]' : 'w-64'} 

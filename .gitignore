@@ -36,3 +36,9 @@ src-tauri/gen/
 .env.*
 Thumbs.db
 Desktop.ini
+
+# Hyper Standalone App Releases
+releases/
+
+# Temp dynamically generated Tauri configs
+src-tauri/tauri.*.conf.json

@@ -1,0 +1,29 @@
+{
+  "music": {
+    "name": "HyperMusic",
+    "version": "1.0.0",
+    "identifier": "com.abhi.hypermusic",
+    "port": 8765,
+    "featureFlag": "music-app",
+    "windowWidth": 800,
+    "windowHeight": 600
+  },
+  "video": {
+    "name": "HyperVideo",
+    "version": "1.0.0",
+    "identifier": "com.abhi.hypervideo",
+    "port": 8766,
+    "featureFlag": "video-app",
+    "windowWidth": 1000,
+    "windowHeight": 700
+  },
+  "recorder": {
+    "name": "HyperRecorder",
+    "version": "1.0.0",
+    "identifier": "com.abhi.hyperrecorder",
+    "port": 8767,
+    "featureFlag": "recorder-app",
+    "windowWidth": 400,
+    "windowHeight": 600
+  }
+}

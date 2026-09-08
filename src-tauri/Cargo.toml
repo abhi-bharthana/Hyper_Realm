@@ -65,3 +65,9 @@ opt-level = "s"
 strip = true
 panic = "abort"
 
+[features]
+default = ["music-app", "video-app", "browser-app", "recorder-app"]
+music-app = []
+video-app = []
+browser-app = []
+recorder-app = []

@@ -25,6 +25,10 @@ export default function VideoPlayer() {
   const [isTranscoding, setIsTranscoding] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // 🔥 NAYA LOGIC: Dynamic Port (Vite env se uthayega, warna default 8765 use karega)
+  // Agar app target video hai toh automatically 8766 lega (jo humne lib.rs me set kiya hai)
+  const SERVER_PORT = import.meta.env.VITE_SERVER_PORT || (import.meta.env.VITE_APP_TARGET === 'video' ? 8766 : 8765);
+
   const fetchSystemVideos = async () => {
     setIsLoading(true);
     setErrorMessage(null);
@@ -105,8 +109,15 @@ export default function VideoPlayer() {
     try {
       const processedPath = await invoke<string>('prepare_video_playback', { filePath: video.path });
       if (processedPath) {
-        const assetUrl = convertFileSrc(processedPath);
-        setVideoSrc(assetUrl);
+        // 🔥 UPDATE: Axum Server Streaming URL instead of convertFileSrc
+        // Yeh buffering aur seeking ko Tauri asset protocol se zyada fast banayega
+        const streamUrl = `http://127.0.0.1:${SERVER_PORT}/stream?path=${encodeURIComponent(processedPath)}`;
+        
+        // Note: Agar aapka Rust route '/stream' nahi hai, toh aap isko comment karke
+        // wapas neeche wala convertFileSrc() use kar sakte hain:
+        // const streamUrl = convertFileSrc(processedPath);
+
+        setVideoSrc(streamUrl);
         setVideoTitle(video.name);
         setIsTranscoding(false);
         setIsPlaying(true);
@@ -128,12 +139,10 @@ export default function VideoPlayer() {
   };
 
   return (
-    // Fixed: Now syncs with global light/dark theme seamlessly
     <div className="h-full flex flex-col bg-white/50 dark:bg-[#0a0a0c]/80 text-slate-900 dark:text-zinc-100 rounded-[1.5rem] overflow-hidden border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-[0_1rem_3rem_rgba(0,0,0,0.5)] p-[1.5rem] md:p-[2rem] gap-[1.5rem] transition-colors duration-500">
       
       <VideoHeader isLoading={isLoading} onScan={fetchSystemVideos} onFileSelect={handleFileSelect} />
 
-      {/* Error Box Fixed: Adapts to theme properly */}
       {errorMessage && (
         <div className="bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 px-[1rem] py-[0.75rem] rounded-[1rem] flex items-center gap-[0.75rem] shrink-0">
           <AlertCircle className="w-[1rem] h-[1rem] shrink-0" />
@@ -145,7 +154,6 @@ export default function VideoPlayer() {
         
         <VideoSidebar videos={systemVideos} onSelectVideo={playSystemVideo} />
 
-        {/* Video Player remains dark internally because videos need a black canvas */}
         <div className="lg:col-span-3 bg-black rounded-[1.5rem] overflow-hidden border border-slate-200 dark:border-white/10 relative group flex flex-col shadow-inner">
           
           {isTranscoding && (

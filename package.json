@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "app:dev": "node scripts/build.js",
+    "app:build": "node scripts/build.js"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",
@@ -32,6 +34,7 @@
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
     "autoprefixer": "^10.5.4",
+    "cross-env": "^10.1.0",
     "postcss": "^8.5.26",
     "tailwindcss": "^3.4.19",
     "typescript": "~5.8.3",
