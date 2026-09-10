@@ -4,19 +4,28 @@ import MusicPlayerUI from './MusicPlayerUI';
 import MusicCollection from './MusicCollection';
 import SleepTimerEngine from './SleepTimerEngine';
 import { useMusicStore } from '../../../store/useMusicStore';
+import { SourceToggle } from '../../Shared/SourceToggle';
+import { GlobalProfileModal } from '../../Shared/GlobalProfileModal'; // 🔥 Global Profile Modal Imported
 
 export default function MusicApp() {
   const { playlist, currentTrackIndex } = useMusicStore();
   const currentTrack = currentTrackIndex !== null ? playlist[currentTrackIndex] : null;
   
-  // 🔥 Mobile ke liye Native Bottom Sheet Drawer State
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+  const [syncMode, setSyncMode] = useState<'local' | 'cloud'>('local');
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false); // 🔥 Modal State Added
 
   return (
     <div className="w-full h-full flex relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 bg-slate-50 dark:bg-[#0a0a0c]">
       
       {/* Invisible Audio Engine */}
       <SleepTimerEngine />
+
+      {/* 🔥 GLOBAL PROFILE FLOATING WINDOW */}
+      <GlobalProfileModal 
+        isOpen={isProfileModalOpen} 
+        onClose={() => setIsProfileModalOpen(false)} 
+      />
 
       {/* Background Ambient Glow */}
       {currentTrack?.coverUrl && (
@@ -26,20 +35,29 @@ export default function MusicApp() {
         />
       )}
 
-      {/* 🟢 MAIN PLAYER AREA (Takes Full Screen on Mobile) */}
-      <div className="flex-1 flex flex-col h-full relative z-10 w-full">
-        {/* Mobile Top Navigation Bar */}
-        <div className="md:hidden flex items-center justify-between p-[1.5rem] pb-0 z-50">
-           <span className="text-[0.7rem] font-bold text-slate-500 uppercase tracking-widest">Now Playing</span>
-           <button 
-             onClick={() => setIsLibraryOpen(true)} 
-             className="p-[0.6rem] bg-slate-200/50 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 rounded-full transition-all active:scale-95"
-           >
-             <Library className="w-[1.2rem] h-[1.2rem] text-slate-800 dark:text-white" />
-           </button>
+      {/* 🟢 MAIN PLAYER AREA */}
+      <div className="flex-1 flex flex-col h-full relative z-10 w-full overflow-hidden">
+        
+        {/* 🔥 FLOATING PILL & MOBILE LIBRARY BUTTON */}
+        <div className="absolute top-4 right-6 z-50 flex items-center gap-2">
+          <SourceToggle 
+            currentMode={syncMode} 
+            onModeChange={setSyncMode} 
+            onOpenProfile={() => setIsProfileModalOpen(true)} // 🔥 Wired up to open modal
+          />
+
+          {/* Mobile Library Toggle Button */}
+          <button 
+            onClick={() => setIsLibraryOpen(true)} 
+            className="md:hidden p-2.5 bg-black/30 dark:bg-white/10 backdrop-blur-md hover:bg-black/50 dark:hover:bg-white/20 rounded-full text-white transition-all active:scale-95 border border-white/10 shadow-lg"
+          >
+            <Library className="w-4 h-4" />
+          </button>
         </div>
 
-        <MusicPlayerUI />
+        <div className="flex-1 overflow-hidden">
+          <MusicPlayerUI />
+        </div>
       </div>
 
       {/* 🔵 LIBRARY AREA (Sidebar on PC, Bottom Sheet Drawer on Mobile) */}
@@ -55,7 +73,6 @@ export default function MusicApp() {
         rounded-t-[2rem] md:rounded-none shadow-[0_-1rem_4rem_rgba(0,0,0,0.5)] md:shadow-none
         flex flex-col
       `}>
-         {/* Mobile Drag Handle & Close Button */}
          <div 
            className="md:hidden flex items-center justify-center p-[1rem] cursor-pointer relative" 
            onClick={() => setIsLibraryOpen(false)}
@@ -66,13 +83,12 @@ export default function MusicApp() {
             </button>
          </div>
 
-         {/* Wrapper taaki collection scrollable rahe */}
          <div className="flex-1 overflow-hidden flex flex-col">
            <MusicCollection />
          </div>
       </div>
 
-      {/* 🌑 Mobile Overlay Background (Dim effect when Library is open) */}
+      {/* 🌑 Mobile Overlay Background */}
       {isLibraryOpen && (
         <div
           className="md:hidden absolute inset-0 bg-black/60 z-40 backdrop-blur-[2px] transition-opacity animate-in fade-in duration-300"

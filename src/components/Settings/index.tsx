@@ -18,7 +18,7 @@ import { SidebarSection } from './SidebarSection';
 import { AboutHyperRealm } from './about'; 
 
 // === NAYE SECTIONS JINKO HUMNE ADD KIYA HAI ===
-import Profile from './Profile';
+import Profile from './profile';
 import Battery from './Battery';
 import WidgetsCore from './WidgetsCore';
 
