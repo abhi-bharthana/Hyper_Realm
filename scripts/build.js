@@ -1,28 +1,36 @@
+import 'dotenv/config'; 
 import fs from 'fs';
 import { spawn, execSync } from 'child_process';
 import path from 'path';
 
-// 🚀 Naye Arguments
+// ==========================================
+// 🛠️ PHASE 1: CONFIGURATION & SETUP
+// ==========================================
 const appName = process.argv[2]; 
 const action = process.argv[3] || 'dev'; 
 const platform = process.argv[4] || 'desktop'; 
 
 if (!appName) {
-  console.error("❌ Please provide an app name! Example: node scripts/build.js video build android");
+  console.error("❌ Please provide an app name!");
   process.exit(1);
 }
 
 const manifestPath = path.resolve('hyper.apps.json');
+if (!fs.existsSync(manifestPath)) {
+  console.error(`❌ ERROR: hyper.apps.json not found!`);
+  process.exit(1);
+}
+
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 const config = manifest[appName];
 
 if (!config) {
-  console.error(`❌ App '${appName}' not found in hyper.apps.json!`);
+  console.error(`❌ ERROR: App '${appName}' not found in hyper.apps.json!`);
   process.exit(1);
 }
 
 const appVersion = config.version || "1.0.0";
-console.log(`🚀 Starting ${config.name} (v${appVersion}) for ${platform.toUpperCase()} in ${action.toUpperCase()} mode...`);
+console.log(`\n🚀 [OPTIMIZED BUILDER] Starting ${config.name} (v${appVersion}) for ${platform.toUpperCase()}...\n`);
 
 const baseTauriConfig = {
   "$schema": "https://schema.tauri.app/config/2",
@@ -45,11 +53,42 @@ const baseTauriConfig = {
     "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"]
   }
 };
-
-const configPath = path.resolve(`src-tauri/tauri.${appName}.conf.json`);
-fs.writeFileSync(configPath, JSON.stringify(baseTauriConfig, null, 2));
+fs.writeFileSync(path.resolve(`src-tauri/tauri.${appName}.conf.json`), JSON.stringify(baseTauriConfig, null, 2));
 
 const tauriCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+
+let androidSdkPath = process.env.ANDROID_HOME || '';
+let androidNdkPath = process.env.NDK_HOME || '';
+
+// ==========================================
+// 🧠 PHASE 2: SMART ENVIRONMENT PREP
+// ==========================================
+if (platform === 'android') {
+  if (!androidSdkPath) {
+    androidSdkPath = process.platform === 'win32' 
+      ? path.join(process.env.LOCALAPPDATA, 'Android', 'Sdk')
+      : path.join(process.env.HOME, 'Library', 'Android', 'sdk');
+  }
+
+  if (!androidNdkPath && fs.existsSync(path.join(androidSdkPath, 'ndk'))) {
+    const ndkDir = path.join(androidSdkPath, 'ndk');
+    let versions = fs.readdirSync(ndkDir).filter(f => fs.statSync(path.join(ndkDir, f)).isDirectory());
+    
+    if (process.platform === 'win32') {
+       versions = versions.filter(v => !v.startsWith('29.')); 
+    }
+
+    if (versions.length > 0) {
+      versions.sort((a, b) => b.localeCompare(a, undefined, { numeric: true })); 
+      androidNdkPath = path.join(ndkDir, versions[0]);
+      console.log(`🤖 Selected Stable NDK: ${versions[0]}`);
+    } else {
+      console.error(`\n❌ ERROR: No stable NDK found!`);
+      process.exit(1);
+    }
+  }
+}
+
 const env = { 
   ...process.env, 
   HYPER_PORT: config.port.toString(),
@@ -57,111 +96,122 @@ const env = {
   VITE_SERVER_PORT: config.port.toString()
 };
 
-// 🔥 NAYA JAADU: Android Folder Auto-Sync 🔥
-// Yeh logic check karega ki naye app ka package folder bana hai ya nahi.
 if (platform === 'android') {
-  const packagePath = config.identifier.split('.').join('/'); // "com.abhi.music" -> "com/abhi/music"
+  // 🔥 SARE PATHS ZABARDASTI SET KARO
+  env.ANDROID_HOME = androidSdkPath;
+  env.NDK_HOME = androidNdkPath;
+  env.ANDROID_NDK_HOME = androidNdkPath; // C++ Linker specifically isko dhoondhta hai!
+
+  const packagePath = config.identifier.split('.').join('/'); 
   const expectedDir = path.resolve(`src-tauri/gen/android/app/src/main/java/${packagePath}`);
+  const genDir = path.resolve('src-tauri/gen/android');
   
   if (!fs.existsSync(expectedDir)) {
-    console.log(`\n🔄 App switch detected! Rebuilding Android structure for '${config.identifier}'...`);
-    
-    const genDir = path.resolve('src-tauri/gen/android');
-    if (fs.existsSync(genDir)) {
-      fs.rmSync(genDir, { recursive: true, force: true });
-    }
-    
+    console.log(`🔄 Initializing Android framework...`);
+    if (fs.existsSync(genDir)) fs.rmSync(genDir, { recursive: true, force: true });
+    execSync(`${tauriCmd} tauri android init --config src-tauri/tauri.${appName}.conf.json`, { stdio: 'ignore', env });
+  }
+
+  // 🧹 EXORCISM: Purane Zombie Gradle Daemon ko kill karo!
+  if (fs.existsSync(genDir)) {
     try {
-      execSync(`${tauriCmd} tauri android init --config src-tauri/tauri.${appName}.conf.json`, { stdio: 'inherit', env });
-      console.log(`✅ Android structure re-initialized!\n`);
-    } catch (e) {
-      console.error(`❌ Failed to initialize Android structure.`);
-      process.exit(1);
+      console.log(`🧹 Killing background Gradle Daemons to clear old cache...`);
+      execSync(`gradlew.bat --stop`, { cwd: genDir, stdio: 'ignore' });
+    } catch(e) {}
+  }
+
+  const localPropsPath = path.resolve('src-tauri/gen/android/local.properties');
+  if (!fs.existsSync(localPropsPath)) {
+    fs.writeFileSync(localPropsPath, `sdk.dir=${androidSdkPath.replace(/\\/g, '/')}\n`);
+  }
+
+  // 🛠️ GRADLE WINDOWS BUG FIX (npm.bat Generator)
+  if (process.platform === 'win32') {
+    const tempBin = path.resolve('scripts/.android_bin');
+    if (!fs.existsSync(tempBin)) fs.mkdirSync(tempBin, { recursive: true });
+    
+    // Gradle bewakoof hai jo aaj bhi .bat dhoondhta hai
+    fs.writeFileSync(path.join(tempBin, 'npm.bat'), `@echo off\nnpm.cmd %*\n`);
+    fs.writeFileSync(path.join(tempBin, 'npx.bat'), `@echo off\nnpx.cmd %*\n`);
+    
+    const systemPath = process.env.PATH || process.env.Path || ''; 
+    env.PATH = `${tempBin};${systemPath}`;
+    env.Path = env.PATH;
+  }
+
+  // 🔐 Keystore Injection
+  if (action === 'build') {
+    const keystorePassword = process.env.KEYSTORE_PASSWORD;
+    const absoluteKeystorePath = path.resolve('keys/hyper-release.keystore').replace(/\\/g, '/'); 
+    
+    if (keystorePassword && fs.existsSync(absoluteKeystorePath)) {
+      const keystoreContent = `storePassword=${keystorePassword}\nkeyPassword=${keystorePassword}\nkeyAlias=hyper_alias\nstoreFile=${absoluteKeystorePath}`;
+      fs.writeFileSync(path.resolve('src-tauri/gen/android/keystore.properties'), keystoreContent); 
+      fs.writeFileSync(path.resolve('src-tauri/gen/android/app/keystore.properties'), keystoreContent); 
+      console.log(`🔐 Production Keystore injected!`);
+    } else {
+       console.log(`⚠️ Warning: Keystore not found in 'keys/' folder or Password missing in .env!`);
     }
   }
 }
 
-// Command setup
+// ==========================================
+// ⚙️ PHASE 3: EXECUTION
+// ==========================================
 let tauriArgs = ['tauri'];
-if (platform === 'android') {
-  tauriArgs.push('android');
-}
+if (platform === 'android') tauriArgs.push('android');
 tauriArgs.push(action, '--config', `src-tauri/tauri.${appName}.conf.json`, '--features', config.featureFlag, '--', '--no-default-features');
 
-const child = spawn(tauriCmd, tauriArgs, { 
-  env, 
-  stdio: 'inherit',
-  shell: process.platform === 'win32' // Warning fix
-});
+console.log(`\n⏳ Building via Tauri... This might take a few minutes.\n`);
 
-// 📂 Recursive file finder helper
+const child = spawn(tauriCmd, tauriArgs, { env, stdio: 'inherit', shell: process.platform === 'win32' });
+
+// ==========================================
+// 📦 PHASE 4: ARTIFACT COLLECTION
+// ==========================================
 function findFiles(dir, ext, fileList = []) {
   if (fs.existsSync(dir)) {
     const files = fs.readdirSync(dir);
     for (const file of files) {
       const filePath = path.join(dir, file);
-      if (fs.statSync(filePath).isDirectory()) {
-        findFiles(filePath, ext, fileList);
-      } else if (filePath.endsWith(ext)) {
-        fileList.push(filePath);
-      }
+      if (fs.statSync(filePath).isDirectory()) findFiles(filePath, ext, fileList);
+      else if (filePath.endsWith(ext)) fileList.push(filePath);
     }
   }
   return fileList;
 }
 
 child.on('close', (code) => {
-  console.log(`\n✅ Process exited with code ${code}`);
+  if (code !== 0) {
+    console.error(`\n❌ Build Failed! Check the logs above.`);
+    process.exit(code);
+  }
   
-  if (action === 'build' && code === 0) {
-    console.log(`📦 Organizing release files for ${config.name} (${platform.toUpperCase()})...`);
-    
+  if (action === 'build') {
+    console.log(`\n📦 Harvesting release artifacts...`);
     const releaseDir = path.resolve(`releases/${config.name}/v${appVersion}/${platform}`);
-    if (!fs.existsSync(releaseDir)) {
-      fs.mkdirSync(releaseDir, { recursive: true });
-    }
+    if (!fs.existsSync(releaseDir)) fs.mkdirSync(releaseDir, { recursive: true });
 
     if (platform === 'desktop') {
       const tauriTarget = path.resolve('src-tauri/target/release');
-      
       const rawExe = path.join(tauriTarget, `${config.name}.exe`);
       if (fs.existsSync(rawExe)) {
         fs.copyFileSync(rawExe, path.join(releaseDir, `${config.name}-Portable.exe`));
-        console.log(`   -> Copied Desktop Portable Exe`);
-      }
-
-      const bundleDir = path.join(tauriTarget, 'bundle', 'nsis');
-      if (fs.existsSync(bundleDir)) {
-        const files = fs.readdirSync(bundleDir);
-        const setupFile = files.find(f => f.startsWith(config.name) && f.endsWith('-setup.exe'));
-        if (setupFile) {
-          fs.copyFileSync(path.join(bundleDir, setupFile), path.join(releaseDir, setupFile));
-          console.log(`   -> Copied Desktop Installer Setup`);
-        }
+        console.log(`   ✅ Copied: ${config.name}-Portable.exe`);
       }
     } 
     else if (platform === 'android') {
-       // Android folders jahan APK aur AAB bante hain
-       const apkDir = path.resolve('src-tauri/gen/android/app/build/outputs/apk');
-       const aabDir = path.resolve('src-tauri/gen/android/app/build/outputs/bundle');
-       
-       const apkFiles = findFiles(apkDir, '.apk');
-       apkFiles.forEach(file => {
-          const fileName = path.basename(file);
-          const newName = `${config.name}-v${appVersion}-${fileName}`;
+       findFiles(path.resolve('src-tauri/gen/android/app/build/outputs/apk'), '.apk').forEach(file => {
+          const newName = `${config.name}-v${appVersion}-${path.basename(file)}`;
           fs.copyFileSync(file, path.join(releaseDir, newName));
-          console.log(`   -> Copied APK: ${newName}`);
+          console.log(`   📱 Copied Signed APK: ${newName}`);
        });
-
-       const aabFiles = findFiles(aabDir, '.aab');
-       aabFiles.forEach(file => {
-          const fileName = path.basename(file);
-          const newName = `${config.name}-v${appVersion}-${fileName}`;
+       findFiles(path.resolve('src-tauri/gen/android/app/build/outputs/bundle'), '.aab').forEach(file => {
+          const newName = `${config.name}-v${appVersion}-${path.basename(file)}`;
           fs.copyFileSync(file, path.join(releaseDir, newName));
-          console.log(`   -> Copied AAB (PlayStore Bundle): ${newName}`);
+          console.log(`   🛍️  Copied PlayStore AAB: ${newName}`);
        });
     }
-    
-    console.log(`\n🎉 Build successfully saved to: ${releaseDir}`);
+    console.log(`\n🎉 Success! Files saved to: ${releaseDir}`);
   }
 });

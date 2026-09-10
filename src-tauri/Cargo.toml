@@ -60,9 +60,9 @@ battery = "0.7"
 
 [profile.release]
 codegen-units = 1
-lto = true
+lto = false      # 🔥 FIX 1: Windows-to-Android cross-compile ke liye off
 opt-level = "s"
-strip = true
+strip = false    # 🔥 FIX 2: Linker crash rokne ke liye off
 panic = "abort"
 
 [features]
