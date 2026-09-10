@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Zap, Leaf, Activity, Rocket, Cpu, Clock, Flame } from 'lucide-react';
-import { useAppStore } from '../store/useAppStore';
+import { useAppStore } from "../../store/useAppStore";
 
 interface BatteryData {
   percentage: number;

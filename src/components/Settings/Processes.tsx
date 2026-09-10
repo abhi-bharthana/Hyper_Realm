@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAppStore } from '../store/useAppStore';
+import { useAppStore } from '../../store/useAppStore';
 import { Activity, XCircle, Cpu, Zap } from 'lucide-react';
 
 export const Processes = () => {
