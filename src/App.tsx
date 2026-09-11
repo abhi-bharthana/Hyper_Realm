@@ -13,7 +13,7 @@ import Processes from './components/Settings/Processes';
 import Battery from './components/Settings/Battery';
 import Services from './components/Services';
 import Libraries from './components/Libraries';
-import Profile from './components/Settings/Profile';
+import Profile from './components/Settings/profile';
 import Settings from './components/Settings';
 import WidgetsCore from './components/Settings/WidgetsCore';
 import HyperLinkView from './components/hyperlink/HyperLinkView'; 

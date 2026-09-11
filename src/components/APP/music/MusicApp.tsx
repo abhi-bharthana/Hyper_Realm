@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
-import { Library, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Library, ChevronDown, ShieldAlert } from 'lucide-react';
+import { invoke } from '@tauri-apps/api/core';
+import { type } from '@tauri-apps/plugin-os';
+
 import MusicPlayerUI from './MusicPlayerUI';
 import MusicCollection from './MusicCollection';
 import SleepTimerEngine from './SleepTimerEngine';
 import { useMusicStore } from '../../../store/useMusicStore';
 import { SourceToggle } from '../../Shared/SourceToggle';
-import { GlobalProfileModal } from '../../Shared/GlobalProfileModal'; // 🔥 Global Profile Modal Imported
+import { GlobalProfileModal } from '../../Shared/GlobalProfileModal'; 
 
 export default function MusicApp() {
   const { playlist, currentTrackIndex } = useMusicStore();
@@ -13,7 +16,39 @@ export default function MusicApp() {
   
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [syncMode, setSyncMode] = useState<'local' | 'cloud'>('local');
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false); // 🔥 Modal State Added
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  
+  // 🔥 ANDROID SPECIFIC STATES
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null); // null = checking
+
+  useEffect(() => {
+    const checkAndRequestPermissions = async () => {
+      try {
+        const osType = await type(); // Detect OS at runtime
+        
+        if (osType === 'android') {
+          // Tauri backend se permission status check ya request karo
+          const granted = await invoke<boolean>('request_audio_permissions');
+          setHasPermission(granted);
+          
+          if (granted) {
+            console.log("📱 Android Media Permission Granted! Ready to scan.");
+            // Yahan agar chaho toh auto-scan trigger kar sakte ho
+          } else {
+            console.warn("📱 Android Media Permission Denied.");
+          }
+        } else {
+          // Windows/Linux/macOS par permissions automatically granted hoti hain
+          setHasPermission(true);
+        }
+      } catch (error) {
+        console.error("OS detection or Permission check failed:", error);
+        setHasPermission(true); // Fallback to true so UI doesn't break on errors
+      }
+    };
+
+    checkAndRequestPermissions();
+  }, []);
 
   return (
     <div className="w-full h-full flex relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 bg-slate-50 dark:bg-[#0a0a0c]">
@@ -28,22 +63,39 @@ export default function MusicApp() {
       />
 
       {/* Background Ambient Glow */}
-      {currentTrack?.coverUrl && (
+      {currentTrack?.coverUrl && hasPermission && (
         <div
           className="absolute inset-0 z-0 opacity-[0.03] dark:opacity-[0.12] bg-cover bg-center transition-all duration-1000 pointer-events-none"
           style={{ backgroundImage: `url(${currentTrack.coverUrl})`, filter: 'blur(4rem)' }}
         />
       )}
 
+      {/* 🔴 PERMISSION DENIED OVERLAY (Only for Android) */}
+      {hasPermission === false && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-50/90 dark:bg-[#0a0a0c]/90 backdrop-blur-md p-6 text-center">
+          <ShieldAlert className="w-16 h-16 text-rose-500 mb-4 drop-shadow-[0_0_1rem_rgba(244,63,94,0.5)]" />
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Storage Access Needed</h2>
+          <p className="text-slate-500 dark:text-white/60 mb-6 max-w-sm">
+            Hyper_Realm needs permission to access your audio files to play local music on Android.
+          </p>
+          <button 
+            onClick={() => window.location.reload()} // Reloading will re-trigger the prompt
+            className="px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-black rounded-full font-medium hover:scale-105 active:scale-95 transition-all shadow-lg"
+          >
+            Grant Permission
+          </button>
+        </div>
+      )}
+
       {/* 🟢 MAIN PLAYER AREA */}
       <div className="flex-1 flex flex-col h-full relative z-10 w-full overflow-hidden">
         
         {/* 🔥 FLOATING PILL & MOBILE LIBRARY BUTTON */}
-        <div className="absolute top-4 right-6 z-50 flex items-center gap-2">
+        <div className="absolute top-4 right-6 z-40 flex items-center gap-2">
           <SourceToggle 
             currentMode={syncMode} 
             onModeChange={setSyncMode} 
-            onOpenProfile={() => setIsProfileModalOpen(true)} // 🔥 Wired up to open modal
+            onOpenProfile={() => setIsProfileModalOpen(true)} 
           />
 
           {/* Mobile Library Toggle Button */}

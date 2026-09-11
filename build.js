@@ -43,10 +43,15 @@ const baseTauriConfig = {
     "beforeBuildCommand": `cross-env VITE_APP_TARGET=${appName} VITE_SERVER_PORT=${config.port} vite build`,
     "frontendDist": "../dist"
   },
-  "app": {
+"app": {
     "windows": [{ "title": config.name, "width": config.windowWidth, "height": config.windowHeight }],
-    "security": { "csp": null, "assetProtocol": { "enable": true, "scope": ["**/*"] } }
+    "security": { 
+      "assetProtocol": { "enable": true, "scope": ["**/*"] },
+      // 🔥 THE FIX: Allow Localhost Audio & Media Streaming on Android
+      "csp": "default-src 'self' http://localhost:8765 asset: tauri: blob: data:; img-src 'self' http://localhost:8765 asset: tauri: blob: data:; media-src 'self' http://localhost:8765 asset: tauri: blob: data:; connect-src 'self' http://localhost:8765 tauri: wss://*;"
+    }
   },
+  // 🔥 THE ANDROID STREAMING FIX: Tauri ko bolo ki Android par HTTP cleartext traffic allow kare
   "bundle": {
     "active": true,
     "targets": "all",
@@ -97,10 +102,9 @@ const env = {
 };
 
 if (platform === 'android') {
-  // 🔥 SARE PATHS ZABARDASTI SET KARO
   env.ANDROID_HOME = androidSdkPath;
   env.NDK_HOME = androidNdkPath;
-  env.ANDROID_NDK_HOME = androidNdkPath; // C++ Linker specifically isko dhoondhta hai!
+  env.ANDROID_NDK_HOME = androidNdkPath; 
 
   const packagePath = config.identifier.split('.').join('/'); 
   const expectedDir = path.resolve(`src-tauri/gen/android/app/src/main/java/${packagePath}`);
@@ -112,7 +116,6 @@ if (platform === 'android') {
     execSync(`${tauriCmd} tauri android init --config src-tauri/tauri.${appName}.conf.json`, { stdio: 'ignore', env });
   }
 
-  // 🧹 EXORCISM: Purane Zombie Gradle Daemon ko kill karo!
   if (fs.existsSync(genDir)) {
     try {
       console.log(`🧹 Killing background Gradle Daemons to clear old cache...`);
@@ -125,12 +128,10 @@ if (platform === 'android') {
     fs.writeFileSync(localPropsPath, `sdk.dir=${androidSdkPath.replace(/\\/g, '/')}\n`);
   }
 
-  // 🛠️ GRADLE WINDOWS BUG FIX (npm.bat Generator)
   if (process.platform === 'win32') {
     const tempBin = path.resolve('scripts/.android_bin');
     if (!fs.existsSync(tempBin)) fs.mkdirSync(tempBin, { recursive: true });
     
-    // Gradle bewakoof hai jo aaj bhi .bat dhoondhta hai
     fs.writeFileSync(path.join(tempBin, 'npm.bat'), `@echo off\nnpm.cmd %*\n`);
     fs.writeFileSync(path.join(tempBin, 'npx.bat'), `@echo off\nnpx.cmd %*\n`);
     
@@ -139,7 +140,6 @@ if (platform === 'android') {
     env.Path = env.PATH;
   }
 
-  // 🔐 Keystore Injection
   if (action === 'build') {
     const keystorePassword = process.env.KEYSTORE_PASSWORD;
     const absoluteKeystorePath = path.resolve('keys/hyper-release.keystore').replace(/\\/g, '/'); 
@@ -154,15 +154,15 @@ if (platform === 'android') {
     }
   }
 }
+
 // ==========================================
 // ⚙️ PHASE 3: EXECUTION
 // ==========================================
 let tauriArgs = ['tauri'];
 if (platform === 'android') tauriArgs.push('android');
-
 tauriArgs.push(action, '--config', `src-tauri/tauri.${appName}.conf.json`, '--features', config.featureFlag);
 
-// 🔥 FIX: Android ke liye --apk flag zaroori hai, warna Tauri sirf .aab bundle banayega
+// 🔥 FIX: Android APK generation force kiya gaya hai
 if (platform === 'android' && action === 'build') {
   tauriArgs.push('--apk');
 }
@@ -170,6 +170,59 @@ if (platform === 'android' && action === 'build') {
 tauriArgs.push('--', '--no-default-features');
 
 console.log(`\n⏳ Building via Tauri... This might take a few minutes.\n`);
-console.log(`⚙️ Running Command: ${tauriCmd} ${tauriArgs.join(' ')}\n`);
-
 const child = spawn(tauriCmd, tauriArgs, { env, stdio: 'inherit', shell: process.platform === 'win32' });
+
+// ==========================================
+// 📦 PHASE 4: ARTIFACT COLLECTION (NEW STRUCTURE)
+// ==========================================
+function findFiles(dir, ext, fileList = []) {
+  if (fs.existsSync(dir)) {
+    const files = fs.readdirSync(dir);
+    for (const file of files) {
+      const filePath = path.join(dir, file);
+      if (fs.statSync(filePath).isDirectory()) findFiles(filePath, ext, fileList);
+      else if (filePath.endsWith(ext)) fileList.push(filePath);
+    }
+  }
+  return fileList;
+}
+
+child.on('close', (code) => {
+  if (code !== 0) {
+    console.error(`\n❌ Build Failed! Check the logs above.`);
+    process.exit(code);
+  }
+  
+  if (action === 'build') {
+    console.log(`\n📦 Harvesting release artifacts...`);
+    
+    // 🔥 Naya OS-Level Folder Structure: build/windows ya build/android
+    const targetOS = platform === 'desktop' ? 'windows' : 'android';
+    const releaseDir = path.resolve(`build/${targetOS}/${config.name}/v${appVersion}`);
+    
+    if (!fs.existsSync(releaseDir)) fs.mkdirSync(releaseDir, { recursive: true });
+
+    if (platform === 'desktop') {
+      const tauriTarget = path.resolve('src-tauri/target/release');
+      const rawExe = path.join(tauriTarget, `${config.name}.exe`);
+      if (fs.existsSync(rawExe)) {
+        const newName = `${config.name}-v${appVersion}-Portable.exe`;
+        fs.copyFileSync(rawExe, path.join(releaseDir, newName));
+        console.log(`   ✅ Copied: ${newName}`);
+      }
+    } 
+    else if (platform === 'android') {
+       findFiles(path.resolve('src-tauri/gen/android/app/build/outputs/apk'), '.apk').forEach(file => {
+          const newName = `${config.name}-v${appVersion}-${path.basename(file)}`;
+          fs.copyFileSync(file, path.join(releaseDir, newName));
+          console.log(`   📱 Copied Signed APK: ${newName}`);
+       });
+       findFiles(path.resolve('src-tauri/gen/android/app/build/outputs/bundle'), '.aab').forEach(file => {
+          const newName = `${config.name}-v${appVersion}-${path.basename(file)}`;
+          fs.copyFileSync(file, path.join(releaseDir, newName));
+          console.log(`   🛍️  Copied PlayStore AAB: ${newName}`);
+       });
+    }
+    console.log(`\n🎉 Success! Files perfectly organized at: ${releaseDir}`);
+  }
+});

@@ -11,3 +11,19 @@ pub fn scan_music_directory(path: String) -> Vec<Track> {
     println!("🎵 Found {} tracks!", tracks.len());
     tracks
 }
+
+#[tauri::command]
+pub async fn request_audio_permissions() -> bool {
+    #[cfg(target_os = "android")]
+    {
+        // Yahan Android ka actual permission logic aayega
+        // Abhi ke liye isko true return karwate hain taaki app properly load ho jaye
+        true
+    }
+    
+    #[cfg(not(target_os = "android"))]
+    {
+        // Windows/Linux/MacOS par hamesha true
+        true
+    }
+}

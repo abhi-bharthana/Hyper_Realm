@@ -42,3 +42,26 @@ releases/
 
 # Temp dynamically generated Tauri configs
 src-tauri/tauri.*.conf.json
+
+# Node & Dependencies
+node_modules/
+dist/
+.eslintcache
+
+# Tauri, Rust & Android Builds
+src-tauri/target/
+src-tauri/gen/android/
+build/
+releases/
+scripts/.android_bin/
+
+# Secrets & Keys (EXTREMELY IMPORTANT)
+.env
+keys/
+*.keystore
+*.jks
+keystore.properties
+
+# OS generated files
+.DS_Store
+Thumbs.db

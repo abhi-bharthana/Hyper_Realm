@@ -7,6 +7,7 @@ export default function SleepTimerEngine() {
   const isFading = useRef(false);
 
   useEffect(() => {
+    // Agar timer active nahi hai, toh fading flag reset kar do
     if (!sleepTimer.active || !sleepTimer.endTime) {
       isFading.current = false;
       return;
@@ -14,23 +15,26 @@ export default function SleepTimerEngine() {
 
     const checkInterval = setInterval(() => {
       const audio = document.getElementById('global-audio-player') as HTMLAudioElement;
-      if (!audio) return;
+      if (!audio || !audio.duration) return;
 
       const now = Date.now();
       const timeLeftMS = sleepTimer.endTime! - now;
+      const timeLeftSec = timeLeftMS / 1000;
+      const trackTimeLeftSec = audio.duration - audio.currentTime;
 
-      // STRICT MODE LOGIC
+      // ⏳ STRICT MODE LOGIC
       if (sleepTimer.mode === 'strict') {
-        if (timeLeftMS <= 30000 && timeLeftMS > 0) {
+        if (timeLeftSec <= 30 && timeLeftSec > 0) {
           // Aakhiri 30 seconds mein volume fade out
           if (!isFading.current) {
             originalVolume.current = audio.volume || 1;
             isFading.current = true;
           }
-          const targetVol = (timeLeftMS / 30000) * originalVolume.current;
+          const targetVol = (timeLeftSec / 30) * originalVolume.current;
           audio.volume = Math.max(0, targetVol);
-        } else if (timeLeftMS <= 0) {
-          // Time Up -> Stop Playback
+        } else if (timeLeftSec <= 0) {
+          // Time Up -> Interval roko aur Playback stop karo
+          clearInterval(checkInterval);
           audio.pause();
           setIsPlaying(false);
           audio.volume = originalVolume.current; // Volume reset for next time
@@ -38,13 +42,15 @@ export default function SleepTimerEngine() {
         }
       } 
       
-      // DYNAMIC MODE LOGIC (Finish current track)
+      // 🎵 DYNAMIC MODE LOGIC (Smart Finish)
       else if (sleepTimer.mode === 'dynamic') {
-        if (timeLeftMS <= 0) {
-          // Timer khatam hone ke baad gaane ka remaining time track karo
-          const trackTimeLeftSec = audio.duration - audio.currentTime;
-          
-          if (trackTimeLeftSec <= 30 && trackTimeLeftSec > 0) {
+        // Condition: Kya yeh aakhiri gaana hona chahiye?
+        // True IF: Timer is gaane ke dauran khatam ho raha hai 
+        // OR Timer is gaane ke khatam hone ke agle 120 seconds (2 mins) ke andar khatam ho jayega.
+        const isFinalTrack = timeLeftSec <= (trackTimeLeftSec + 120);
+
+        if (isFinalTrack) {
+          if (trackTimeLeftSec <= 30 && trackTimeLeftSec > 1.5) {
             // Gaane ke aakhiri 30 second mein fade out
             if (!isFading.current) {
               originalVolume.current = audio.volume || 1;
@@ -52,8 +58,10 @@ export default function SleepTimerEngine() {
             }
             const targetVol = (trackTimeLeftSec / 30) * originalVolume.current;
             audio.volume = Math.max(0, targetVol);
-          } else if (trackTimeLeftSec <= 0.5) {
-            // Gaana khatam hote hi stop (Next track play hone se rokna)
+          } else if (trackTimeLeftSec <= 1.5) {
+            // FIX: Gaana khatam hone se theek 1.5 sec pehle hi stop kar do
+            // Taaki global player next song auto-play na kar de
+            clearInterval(checkInterval);
             audio.pause();
             setIsPlaying(false);
             audio.volume = originalVolume.current;
@@ -66,5 +74,5 @@ export default function SleepTimerEngine() {
     return () => clearInterval(checkInterval);
   }, [sleepTimer, cancelSleepTimer, setIsPlaying]);
 
-  return null; // Yeh stealth mode mein chalega
+  return null; // Stealth mode component
 }

@@ -31,6 +31,7 @@ pub fn run() {
     // 1. Basic Builder Setup
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
+        .plugin(tauri_plugin_os::init()) // 🔥 OS Detection Plugin Added Here!
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
@@ -77,6 +78,8 @@ pub fn run() {
             // 🎵 Music Commands
             #[cfg(feature = "music-app")]
             apps::music::commands::scan_music_directory,
+            #[cfg(feature = "music-app")]
+            apps::music::commands::request_audio_permissions, // 🔥 Naya Command Yahan Map Kiya Hai
 
             // 🎙️ AI Recorder & STT Commands
             #[cfg(feature = "recorder-app")]

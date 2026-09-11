@@ -53,6 +53,8 @@ candle-transformers = { version = "0.8.4", optional = true }
 safetensors = { version = "0.4.5", optional = true }
 tokenizers = { version = "0.20.4", default-features = false, optional = true }
 hf-hub = { version = "0.3.2", default-features = false, features = ["tokio"], optional = true }
+rayon = "1.12.0"
+tauri-plugin-os = "2.3.2"
 
 # 🔥 THE FIX: Battery crate sirf Desktop (Windows/Linux/Mac) par load hoga
 [target.'cfg(not(target_os = "android"))'.dependencies]
