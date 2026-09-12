@@ -1,45 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { audioDir } from '@tauri-apps/api/path'; // 🔥 Naya Import for Auto-Scan
-import { FolderSearch, History, ListMusic, Volume2, HardDrive, Trash2, Loader2, RefreshCw, FolderCog, Plus, List, MoreVertical, X, FolderPlus, Heart, ListOrdered, ChevronUp, ChevronDown } from 'lucide-react';
-import { open } from '@tauri-apps/plugin-dialog';
-import { useMusicStore, Track, PlaylistData } from '../../../store/useMusicStore';
-import { scanNativeDirectory } from './musicScanner';
+import { FolderSearch, History, ListMusic, Volume2, Plus, List, MoreVertical, X, FolderCog, Heart, RefreshCw } from 'lucide-react';
+// 🔥 Path Fix: musicCollection -> music -> APP -> components -> src -> store
+import { useMusicStore, Track, PlaylistData } from '../../../../store/useMusicStore';
+// 🔥 Path Fix: musicScanner ek folder piche (music folder) mein hai
+import { scanNativeDirectory } from '../musicScanner';
 
-// DYNAMIC COVER COMPONENT (Fully Scaled)
-const PlaylistCover = ({ trackPaths, allTracks, historyPaths }: { trackPaths: string[], allTracks: Track[], historyPaths: string[] }) => {
-  const playlistTracks = trackPaths.map(p => allTracks.find(t => t.path === p)).filter(Boolean) as Track[];
-  const sortedTracks = [...playlistTracks].sort((a, b) => {
-    const indexA = historyPaths.indexOf(a.path);
-    const indexB = historyPaths.indexOf(b.path);
-    return (indexA === -1 ? 9999 : indexA) - (indexB === -1 ? 9999 : indexB);
-  });
-  
-  const uniqueCovers = Array.from(new Set(sortedTracks.map(t => t.coverUrl).filter(url => url !== '')));
-  const covers = uniqueCovers.slice(0, 4);
-
-  const baseClasses = "w-[3rem] h-[3rem] rounded-[0.75rem] overflow-hidden shrink-0 border border-slate-200 dark:border-white/10";
-
-  if (covers.length === 0) return <div className={`${baseClasses} bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400`}><List className="w-[1.2rem] h-[1.2rem]" /></div>;
-  if (covers.length === 1) return <img src={covers[0]} className={`${baseClasses} object-cover`} alt="Cover" />;
-  if (covers.length === 2) return <div className={`${baseClasses} grid grid-cols-2 gap-[0.1rem] bg-slate-300 dark:bg-slate-800`}><img src={covers[0]} className="w-full h-full object-cover" alt="Cover 1" /><img src={covers[1]} className="w-full h-full object-cover" alt="Cover 2" /></div>;
-  if (covers.length === 3) return <div className={`${baseClasses} grid grid-cols-2 grid-rows-2 gap-[0.1rem] bg-slate-300 dark:bg-slate-800`}><img src={covers[0]} className="w-full h-full object-cover col-span-2 row-span-1" alt="Cover 1" /><img src={covers[1]} className="w-full h-full object-cover col-span-1 row-span-1" alt="Cover 2" /><img src={covers[2]} className="w-full h-full object-cover col-span-1 row-span-1" alt="Cover 3" /></div>;
-  return <div className={`${baseClasses} grid grid-cols-2 grid-rows-2 gap-[0.1rem] bg-slate-300 dark:bg-slate-800`}><img src={covers[0]} className="w-full h-full object-cover" alt="Cover 1" /><img src={covers[1]} className="w-full h-full object-cover" alt="Cover 2" /><img src={covers[2]} className="w-full h-full object-cover" alt="Cover 3" /><img src={covers[3]} className="w-full h-full object-cover" alt="Cover 4" /></div>;
-};
+import { PlaylistCover } from './PlaylistCover';
+import { FolderManager } from './FolderManager';
+import { UpNextQueue } from './UpNextQueue';
 
 export default function MusicCollection() {
   const { 
     playlist, historyPaths, savedDirectories, playlists, favorites, queue,
     currentTrackIndex, isPlaying, 
-    playTrack, playTrackByPath, setPlaylist, addDirectory, removeDirectory, 
+    playTrack, playTrackByPath, setPlaylist, 
     createPlaylist, deletePlaylist, addTrackToPlaylist, removeTrackFromPlaylist, toggleFavorite,
-    addToQueue, playNext, removeFromQueue, clearQueue
+    addToQueue, playNext
   } = useMusicStore();
 
   const [activeView, setActiveView] = useState<'library' | 'history' | 'playlists' | 'folders'>('library');
   const [selectedPlaylist, setSelectedPlaylist] = useState<PlaylistData | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [isQueueExpanded, setIsQueueExpanded] = useState(false);
 
   const currentTrack = currentTrackIndex !== null ? playlist[currentTrackIndex] : null;
 
@@ -58,66 +40,6 @@ export default function MusicCollection() {
     }
     setPlaylist(allTracks);
     setIsScanning(false);
-  };
-
-  const handleNativeFolderSelect = async () => {
-    try {
-      const selectedPath = await open({ directory: true, multiple: false });
-      if (selectedPath && typeof selectedPath === 'string') {
-        setIsScanning(true);
-        addDirectory(selectedPath);
-        const tracks = await scanNativeDirectory(selectedPath);
-        const mergedTracks = [...playlist, ...tracks.filter(newTrack => !playlist.some(p => p.path === newTrack.path))];
-        setPlaylist(mergedTracks);
-        setIsScanning(false);
-      }
-    } catch (error) { setIsScanning(false); }
-  };
-
-// 🔥 MOBILE & PC FRIENDLY UNIVERSAL SCANNER
-  const handleAutoScan = async () => {
-    try {
-      setIsScanning(true);
-      
-      // Mobile par folder picker kaam nahi karta, isliye hum File Picker use karenge
-      const selected = await open({
-        directory: false,    // False taaki mobile par crash na ho
-        multiple: true,      // Multiple gaane select kar sakein
-        filters: [{ 
-          name: 'Audio', 
-          extensions: ['mp3', 'wav', 'flac', 'm4a'] 
-        }]
-      });
-
-      if (selected) {
-        // Agar single string aayi ya array aaya, dono ko handle karenge
-        const files = Array.isArray(selected) ? selected : [selected];
-        
-        if (files.length > 0) {
-          // 🔥 Jaadu: User ne jo gaana select kiya, uska parent folder nikal lo
-          const firstFile = files[0];
-          const lastSlash = Math.max(firstFile.lastIndexOf('/'), firstFile.lastIndexOf('\\'));
-          const parentDir = firstFile.substring(0, lastSlash);
-
-          console.log("📂 Auto-detected Folder from file:", parentDir);
-          
-          addDirectory(parentDir);
-          const tracks = await scanNativeDirectory(parentDir);
-          
-          if (tracks.length > 0) {
-            const mergedTracks = [...playlist, ...tracks.filter(newTrack => !playlist.some(p => p.path === newTrack.path))];
-            setPlaylist(mergedTracks);
-            console.log(`🎵 Loaded ${tracks.length} tracks successfully!`);
-          } else {
-            alert("Folder mil gaya par koi MP3 track nahi mila!");
-          }
-        }
-      }
-      setIsScanning(false);
-    } catch (error) { 
-      console.error("Scan Error:", error);
-      setIsScanning(false); 
-    }
   };
 
   const handleCreatePlaylist = () => {
@@ -178,30 +100,7 @@ export default function MusicCollection() {
       {/* SCROLLABLE LIST SECTION */}
       <div className={`flex-1 overflow-y-auto p-[0.75rem] custom-scrollbar ${queue.length > 0 ? 'pb-[4rem]' : ''}`}>
         
-        {/* 🔥 UPDATED FOLDERS VIEW 🔥 */}
-        {activeView === 'folders' && (
-          <div className="flex flex-col gap-[0.75rem]">
-            {/* 1. Android Auto Scan Button */}
-            <button onClick={handleAutoScan} disabled={isScanning} className="flex items-center justify-center gap-[0.5rem] px-[0.75rem] py-[0.75rem] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[0.85em] font-bold rounded-[0.75rem] border border-emerald-500/20 transition-all">
-              {isScanning ? <Loader2 className="w-[1.2rem] h-[1.2rem] animate-spin" /> : <FolderPlus className="w-[1.2rem] h-[1.2rem]" />} {isScanning ? 'Scanning...' : '✨ Auto-Scan Phone Audio'}
-            </button>
-
-            {/* 2. Manual Folder Select (PC) */}
-            <button onClick={handleNativeFolderSelect} disabled={isScanning} className="flex items-center justify-center gap-[0.5rem] px-[0.75rem] py-[0.75rem] bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-[0.85em] font-bold rounded-[0.75rem] border border-blue-500/20 transition-all">
-              <FolderCog className="w-[1.2rem] h-[1.2rem]" /> Manual Select
-            </button>
-
-            {savedDirectories.map(dir => (
-              <div key={dir} className="flex items-center justify-between bg-white/60 dark:bg-white/5 p-[0.75rem] rounded-[0.75rem] border border-slate-200 dark:border-white/5">
-                <div className="flex items-center gap-[0.75rem] overflow-hidden">
-                  <HardDrive className="w-[1.2rem] h-[1.2rem] text-slate-400 shrink-0" />
-                  <span className="text-[0.8em] font-semibold text-slate-700 dark:text-white/80 truncate" title={dir}>{dir.split('/').pop() || dir.split('\\').pop() || dir}</span>
-                </div>
-                <button onClick={() => removeDirectory(dir)} className="p-[0.4rem] text-red-500/70 hover:text-red-500 hover:bg-red-500/10 rounded-[0.5rem] transition-colors"><Trash2 className="w-[1rem] h-[1rem]" /></button>
-              </div>
-            ))}
-          </div>
-        )}
+        {activeView === 'folders' && <FolderManager />}
 
         {activeView === 'playlists' && !selectedPlaylist && (
           <div className="flex flex-col gap-[0.5rem]">
@@ -241,7 +140,7 @@ export default function MusicCollection() {
                   
                   <div className="flex items-center gap-[0.75rem] cursor-pointer" onClick={() => activeView === 'library' ? playTrack(idx) : playTrackByPath(track.path)}>
                     <div className="relative w-[2.25rem] h-[2.25rem] shrink-0 rounded-[0.6rem] overflow-hidden bg-slate-200 dark:bg-neutral-800 border border-slate-200 dark:border-white/5">
-                      <img src={track.coverUrl || 'placeholder.jpg'} alt="" className="w-full h-full object-cover" />
+                      <img src={track.coverUrl || 'placeholder.jpg'} loading="lazy" decoding="async" alt="" className="w-full h-full object-cover" />
                       {currentTrack?.path === track.path && isPlaying && <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[1px]"><Volume2 className="w-[1rem] h-[1rem] text-white animate-pulse" /></div>}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -288,43 +187,7 @@ export default function MusicCollection() {
         )}
       </div>
 
-      {/* FLOATING UP-NEXT QUEUE BAR */}
-      {queue.length > 0 && (
-        <div className="absolute bottom-0 left-0 right-0 bg-white/95 dark:bg-[#1a1a1a]/95 backdrop-blur-3xl border-t border-slate-200 dark:border-white/10 z-30 transition-all duration-300 rounded-bl-[1.5rem] lg:rounded-bl-none shadow-[0_-0.5rem_2rem_-0.5rem_rgba(0,0,0,0.1)] dark:shadow-[0_-0.5rem_2rem_-0.5rem_rgba(0,0,0,0.5)]">
-          <div className="p-[0.75rem] flex items-center justify-between cursor-pointer" onClick={() => setIsQueueExpanded(!isQueueExpanded)}>
-            <div className="flex items-center gap-[0.5rem]">
-              <ListOrdered className="w-[1.2rem] h-[1.2rem] text-blue-500" />
-              <span className="text-[0.9em] font-bold text-slate-800 dark:text-white">Up Next <span className="text-blue-500 bg-blue-500/10 px-[0.4rem] rounded-[0.4rem] text-[0.7em] ml-[0.25rem]">{queue.length}</span></span>
-            </div>
-            <div className="flex items-center gap-[0.75rem]">
-              <button onClick={(e) => { e.stopPropagation(); clearQueue(); setIsQueueExpanded(false); }} className="text-[0.7em] uppercase tracking-wider font-bold text-slate-400 hover:text-red-500 transition-colors">Clear</button>
-              <div className="p-[0.25rem] bg-slate-100 dark:bg-white/10 rounded-[0.4rem] text-slate-500 dark:text-white/60">
-                {isQueueExpanded ? <ChevronDown className="w-[1rem] h-[1rem]" /> : <ChevronUp className="w-[1rem] h-[1rem]" />}
-              </div>
-            </div>
-          </div>
-          
-          {/* Expanded Queue List */}
-          {isQueueExpanded && (
-            <div className="max-h-[14rem] overflow-y-auto custom-scrollbar p-[0.5rem] space-y-[0.25rem] animate-in slide-in-from-bottom-2">
-              {queue.map((path, idx) => {
-                const qTrack = playlist.find(t => t.path === path);
-                if (!qTrack) return null;
-                return (
-                  <div key={idx} className="flex items-center gap-[0.75rem] p-[0.5rem] hover:bg-slate-100 dark:hover:bg-white/5 rounded-[0.75rem] transition-colors group">
-                    <img src={qTrack.coverUrl || 'placeholder.jpg'} className="w-[2rem] h-[2rem] rounded-[0.5rem] object-cover bg-slate-200 dark:bg-white/10" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[0.8em] font-bold text-slate-800 dark:text-white truncate">{qTrack.title}</p>
-                      <p className="text-[0.7em] text-slate-500 dark:text-white/50 truncate">{qTrack.artist}</p>
-                    </div>
-                    <button onClick={() => removeFromQueue(idx)} className="p-[0.4rem] text-slate-400 opacity-0 group-hover:opacity-100 hover:text-red-500 hover:bg-red-500/10 rounded-[0.4rem] transition-all"><X className="w-[1rem] h-[1rem]"/></button>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      )}
+      <UpNextQueue />
     </div>
   );
 }

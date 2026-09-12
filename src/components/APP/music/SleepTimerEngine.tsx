@@ -69,7 +69,7 @@ export default function SleepTimerEngine() {
           }
         }
       }
-    }, 500); // 500ms precision for smooth volume fade
+    }, 1000); // 1000ms precision for smooth volume fade
 
     return () => clearInterval(checkInterval);
   }, [sleepTimer, cancelSleepTimer, setIsPlaying]);

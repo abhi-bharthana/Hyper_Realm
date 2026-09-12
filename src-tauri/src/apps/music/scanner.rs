@@ -60,8 +60,10 @@ pub fn scan_directory(dir_path: &str) -> Vec<Track> {
 
         let encoded_path = urlencoding::encode(&path_str);
         
-        let cover_url = format!("http://localhost:8765/api/cover?path={}", encoded_path);
-        let stream_url = format!("http://localhost:8765/api/stream?path={}", encoded_path);
+        // 🟢 EXPLICITLY USING 127.0.0.1 INSTEAD OF LOCALHOST
+        // Android WebView ki strict networking aur CORS restrictions ko bypass karne ke liye
+        let cover_url = format!("http://127.0.0.1:8765/api/cover?path={}", encoded_path);
+        let stream_url = format!("http://127.0.0.1:8765/api/stream?path={}", encoded_path);
 
         if let Ok(tag) = Tag::read_from_path(&path) {
             if let Some(t) = tag.title() { title = t.to_string(); }

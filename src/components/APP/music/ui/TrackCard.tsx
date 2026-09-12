@@ -72,7 +72,7 @@ export default function TrackCard({ track, isPlaying, isCenter, style }: Props) 
 
   return (
     // 'h-full' add kiya taaki left/right hitboxes screen ki poori height le sakein
-    <div className="absolute w-full h-full flex flex-col items-center justify-center top-0 pointer-events-none" style={style}>
+    <div className="absolute w-full h-full flex flex-col items-center justify-center top-0 pointer-events-none transform-gpu will-change-transform" style={style}>
       
       <style>{`
         @keyframes bubbleBurst {
@@ -107,7 +107,7 @@ export default function TrackCard({ track, isPlaying, isCenter, style }: Props) 
         </>
       )}
 
-      {/* 🎯 ALBUM WRAPPER: FIX -> Lowered Z-Index to 40 so popup menus sit above it */}
+      {/* 🎯 ALBUM WRAPPER: Lowered Z-Index to 40 so popup menus sit above it */}
       <div 
         className="relative pointer-events-auto z-40 cursor-pointer" 
         onClick={(e) => handleTap('center', e)}
@@ -122,8 +122,8 @@ export default function TrackCard({ track, isPlaying, isCenter, style }: Props) 
         )}
       </div>
 
-      {/* 🎛️ TRACK INFO WRAPPER: FIX -> Raised Z-Index to 50 so Sleep Timer & Playlist menus stay on top */}
-      <div className="relative z-50 w-full flex justify-center pointer-events-none">
+      {/* 🎛️ TRACK INFO WRAPPER: Raised Z-Index to 50 so Sleep Timer & Playlist menus stay on top */}
+      <div className="relative z-50 w-full flex justify-center pointer-events-none mt-4">
         <TrackInfo track={track} />
       </div>
       

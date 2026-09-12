@@ -17,21 +17,19 @@ pub struct SysState(pub Mutex<System>);
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // 🔥 SMART PORT LOGIC: Ab hardcoded if-else ki zaroorat nahi!
-    // Node.js build script automatically 'HYPER_PORT' environment variable set karegi.
     let server_port: u16 = std::env::var("HYPER_PORT")
         .unwrap_or_else(|_| "8765".to_string())
         .parse()
         .unwrap_or(8765);
 
     tauri::async_runtime::spawn(async move {
-        // Naya assigned port yahan use hoga
         crate::server::manager::start_axum_server(server_port).await;
     });
 
     // 1. Basic Builder Setup
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
-        .plugin(tauri_plugin_os::init()) // 🔥 OS Detection Plugin Added Here!
+        .plugin(tauri_plugin_os::init()) 
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
@@ -40,11 +38,14 @@ pub fn run() {
             process: Mutex::new(None),
         });
 
-    // 2. 🚀 Asli AudioCapture State ko isolate kiya
+    // 2. 🎙️ Asli AudioCapture State ko isolate kiya
     #[cfg(feature = "recorder-app")]
     {
         builder = builder.manage(RecorderState(Mutex::new(AudioCapture::new())));
     }
+
+    // 🚀 DHYAN DE: Yahan se 'NativeAudioPlayer' wala code hamesha ke liye delete kar diya hai.
+    // Ab tera Rust backend kabhi audio hardware panic nahi karega!
 
     // 3. Command Handler with Isolation
     builder
@@ -75,11 +76,11 @@ pub fn run() {
             #[cfg(feature = "browser-app")]
             apps::browser::commands::format_search_query,
             
-            // 🎵 Music Commands
+            // 🎵 Music Commands (Sirf Scanner aur Permissions, No Native Player!)
             #[cfg(feature = "music-app")]
             apps::music::commands::scan_music_directory,
             #[cfg(feature = "music-app")]
-            apps::music::commands::request_audio_permissions, // 🔥 Naya Command Yahan Map Kiya Hai
+            apps::music::commands::request_audio_permissions,
 
             // 🎙️ AI Recorder & STT Commands
             #[cfg(feature = "recorder-app")]

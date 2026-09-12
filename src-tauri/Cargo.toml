@@ -25,6 +25,7 @@ rand = "=0.8.8"
 rand_core = "=0.6.4"
 rand_distr = "=0.4.3"
 
+
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 id3 = "1.17.1"

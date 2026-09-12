@@ -7,20 +7,36 @@ import PlaybackControls from './ui/PlaybackControls';
 import TrackCard from './ui/TrackCard';
 
 export default function MusicPlayerUI() {
-  const { playlist, currentTrackIndex, isPlaying } = useMusicStore();
+  const playlist = useMusicStore((state) => state.playlist);
+  const currentTrackIndex = useMusicStore((state) => state.currentTrackIndex);
+  const isPlaying = useMusicStore((state) => state.isPlaying);
+  // 🔥 CRASH FIX: useMusicStore se 'playTrack' nikala badle mein 'setCurrentTrackIndex' ke
+  const playTrack = useMusicStore((state) => state.playTrack);
+
   const containerRef = useRef<HTMLDivElement>(null);
-  
-  // 🧠 Import separated brains
   const physics = useGalleryPhysics(containerRef);
   
-  const handleNextClick = () => { if (playlist.length) physics.snapToTarget(-1); };
-  const handlePrevClick = () => { if (playlist.length) physics.snapToTarget(1); };
+  const validIndex = currentTrackIndex !== null ? currentTrackIndex : 0;
+
+  // 🔥 Mismatched Song & Crash Fix
+  const handleNextClick = () => { 
+    if (playlist.length) {
+      physics.snapToTarget(-1); 
+      // Sahi function call kiya jisse backend aur store safely update honge
+      playTrack((validIndex + 1) % playlist.length);
+    }
+  };
+  
+  const handlePrevClick = () => { 
+    if (playlist.length) {
+      physics.snapToTarget(1); 
+      playTrack((validIndex - 1 + playlist.length) % playlist.length);
+    }
+  };
   
   useKeyboardControls(handleNextClick, handlePrevClick);
 
-  // 31 Virtual Cards
   const OFFSETS = Array.from({ length: 31 }, (_, i) => i - 15);
-  const validIndex = currentTrackIndex !== null ? currentTrackIndex : 0;
 
   const getTrack = (offset: number) => {
     if (!playlist.length) return null;
@@ -57,7 +73,6 @@ export default function MusicPlayerUI() {
         })}
       </div>
 
-      {/* 🔥 FIX: Changed z-20 to z-[60] and added relative to break out of trapping */}
       <div className="w-full max-w-[26rem] flex flex-col items-center px-[1rem] z-[60] shrink-0 relative">
         <ProgressBar />
         <PlaybackControls onNext={handleNextClick} onPrev={handlePrevClick} />
