@@ -30,8 +30,8 @@ export default function GlobalAudioEngine() {
     const audio = audioRef.current;
     if (audio && currentTrack) {
       
-      // 🔥 THE ULTIMATE FIX: Android WebView Security Bypass using Rust Stream
-      const streamUrl = `http://127.0.0.1:${SERVER_PORT}/api/stream?path=${encodeURIComponent(currentTrack.path)}`;
+      // 🔥 FIX: Prefer Tauri's native asset URL first, fallback to Rust Stream
+      const streamUrl = currentTrack.url || `http://127.0.0.1:${SERVER_PORT}/api/stream?path=${encodeURIComponent(currentTrack.path)}`;
       
       if (audio.src !== streamUrl) {
         audio.src = streamUrl;
@@ -40,7 +40,7 @@ export default function GlobalAudioEngine() {
 
       if (isPlaying) {
         audio.play().catch((e) => {
-            console.error("Playback failed:", e);
+            console.error("Audio Load/Play Error Details:", e);
             setIsPlaying(false);
         });
       } else {

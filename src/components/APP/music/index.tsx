@@ -6,7 +6,6 @@ import { audioDir } from '@tauri-apps/api/path';
 import { readDir } from '@tauri-apps/plugin-fs';
 import MusicPlayerUI from './MusicPlayerUI';
 import MusicCollection from './musicCollection/MusicCollection';
-import SleepTimerEngine from './SleepTimerEngine';
 import { useMusicStore } from './store';
 import { SourceToggle } from '../../Shared/SourceToggle';
 import { GlobalProfileModal } from '../../Shared/GlobalProfileModal';
@@ -78,7 +77,7 @@ export default function MusicApp() {
       onTouchStart={handleGlobalTouchStart}
       onTouchMove={handleGlobalTouchMove}
     >
-      <SleepTimerEngine />
+      {/* 🚀 GlobalAudioEngine AND SleepTimerEngine REMOVED FROM HERE */}
       <GlobalProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
 
       {/* 🚀 GPU-ACCELERATED AMBIENT GLOW */}
@@ -107,14 +106,24 @@ export default function MusicApp() {
 
       {/* MAIN PLAYER AREA */}
       <div className="flex-1 flex flex-col h-full relative z-10 w-full overflow-hidden">
+        
+        {/* FLOATING BUTTONS (No solid header, merges with background) */}
         <div className="absolute top-10 md:top-8 right-6 z-40 flex items-center gap-3">
-          <SourceToggle currentMode={syncMode} onModeChange={setSyncMode} onOpenProfile={() => setIsProfileModalOpen(true)} />
-          <button onClick={() => setIsLibraryOpen(true)} className="md:hidden p-2.5 bg-black/30 dark:bg-white/10 backdrop-blur-xl hover:bg-black/50 rounded-full text-white transition-all active:scale-95 shadow-xl">
+          <SourceToggle 
+            currentMode={syncMode} 
+            onModeChange={setSyncMode} 
+            onOpenProfile={() => setIsProfileModalOpen(true)} 
+          />
+          <button 
+            onClick={() => setIsLibraryOpen(true)} 
+            className="md:hidden p-2.5 bg-black/30 dark:bg-white/10 backdrop-blur-xl hover:bg-black/50 rounded-full text-white transition-all active:scale-95 shadow-xl"
+          >
             <Library className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-hidden pt-12 relative flex flex-col">
+        {/* 🚀 FIX: Removed pt-12 and added justify-center for perfect alignment */}
+        <div className="flex-1 overflow-hidden relative flex flex-col justify-center">
           <MusicPlayerUI />
           
           {/* Swipe Up Hint */}

@@ -3,7 +3,6 @@ import {
   ChevronDown, 
   ChevronUp, 
   Battery as BatteryIcon, 
-  LayoutTemplate, 
   Palette, 
   MonitorSmartphone, 
   PanelLeft, 
@@ -20,7 +19,6 @@ import { AboutHyperRealm } from './about';
 // === NAYE SECTIONS JINKO HUMNE ADD KIYA HAI ===
 import Profile from './profile';
 import Battery from './Battery';
-import WidgetsCore from './WidgetsCore';
 
 // 🎨 CUSTOM COMPONENT: Expandable Section (Accordion)
 const CollapsibleSection = ({ title, icon: Icon, children, defaultOpen = false }: any) => {
@@ -94,10 +92,6 @@ export default function Settings() {
 
           <CollapsibleSection title="Power & Battery" icon={BatteryIcon}>
             <Battery />
-          </CollapsibleSection>
-
-          <CollapsibleSection title="Widgets Management" icon={LayoutTemplate}>
-            <WidgetsCore />
           </CollapsibleSection>
 
           <CollapsibleSection title="Interface Options" icon={MonitorSmartphone}>

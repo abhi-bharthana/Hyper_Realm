@@ -5,19 +5,18 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 // 🚀 Core System Components
 import { Sidebar } from './components/Sidebar';
 import Home from './components/home/Home';
-import Dashboard from './components/Dashboard';
-import { Applications } from './components/APP/launcher/Applications'; // 🔥 Updated Path
+import { Applications } from './components/APP/launcher/Applications';
 import Processes from './components/Settings/Processes';
 import Battery from './components/Settings/Battery';
 import Services from './components/Services';
 import Libraries from './components/Libraries';
 import Profile from './components/Settings/profile';
 import Settings from './components/Settings';
-import WidgetsCore from './components/Settings/WidgetsCore';
 import HyperLinkView from './components/hyperlink/HyperLinkView'; 
 
 // 🎵 Global Services
 import GlobalAudioEngine from './components/APP/music/GlobalAudioEngine';
+import SleepTimerEngine from './components/APP/music/SleepTimerEngine';
 
 // 🔥 DYNAMIC REGISTRY IMPORT
 import { CORE_APPS } from './components/APP/appRegistry';
@@ -27,7 +26,7 @@ import { useSidebarStore } from './store/useSidebarStore';
 
 export default function App() {
   const { 
-    environmentName, theme, activeTab, setActiveTab, setAppIdle, 
+    theme, activeTab, setActiveTab, setAppIdle, 
     homeBackgroundType, homeBackgroundValue,
     globalFontFamily, uiScale, textScale, isEyeCareEnabled, eyeCareIntensity 
   } = useAppStore();
@@ -121,20 +120,25 @@ export default function App() {
         {isEyeCareEnabled && (
           <div className="fixed inset-0 z-[99999] pointer-events-none mix-blend-multiply transition-opacity duration-700" style={{ backgroundColor: '#ff8c00', opacity: eyeCareIntensity / 100 }} />
         )}
-        {appTarget === 'hyper-music' && <GlobalAudioEngine />}
+        
+        {/* 🔥 BOTH ENGINES IN BACKGROUND OF APP WINDOW */}
+        {appTarget === 'hyper-music' && (
+          <>
+            <GlobalAudioEngine />
+            <SleepTimerEngine />
+          </>
+        )}
+        
         {TargetComponent ? <TargetComponent /> : <div className="text-white p-4">App Module Not Found</div>}
       </div>
     );
   }
 
   const getHeaderDescription = () => {
-    // We removed 'Applications' from here because it manages its own header now
     switch (activeTab) {
-      case 'Widgets Core': return "Granular telemetry and standalone module orchestration.";
       case 'Hyper-Link': return "Seamless connectivity, global cloud tunnels, and local network bridges."; 
       case 'Processes': return "Live system metrics and resource consumption.";
       case 'Battery': return "Power draw and ARM64 efficiency node status.";
-      case 'Dashboard': return "System core overview and analytics.";
       case 'Profile': return "Manage identity and view hardware specifications.";
       case 'Node Settings': return "Configuration and workspace management.";
       default: return "System workspace configuration.";
@@ -157,9 +161,11 @@ export default function App() {
       }`}
       style={ showCustomBg ? { backgroundColor: homeBackgroundType === 'solid' ? homeBackgroundValue : 'transparent', backgroundImage: homeBackgroundType === 'gradient' ? homeBackgroundValue : (homeBackgroundType === 'image' ? `url(${homeBackgroundValue})` : 'none'), backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' } : {} }
     >
-      {/* Style blocks and background blurs omitted for brevity, they remain identical */}
-      
-      {/* Sidebar Logic Remains the same */}
+      {/* 🚀 ENGINES LOADED GLOBALLY FOR MAIN WINDOW */}
+      <GlobalAudioEngine />
+      <SleepTimerEngine />
+
+      {/* Sidebar Logic */}
       <div className={`transition-all duration-500 ease-in-out z-[99] flex-shrink-0 h-full py-[1.5em] pl-[1.5em] ${isSidebarCollapsed ? 'w-[5.5rem]' : 'w-64'} ${isSidebarAutoHide ? 'absolute left-0 -translate-x-[calc(100%-4px)] hover:translate-x-0' : 'relative translate-x-0'}`}>
         {isSidebarAutoHide && <div className="absolute top-0 right-0 w-8 h-full bg-transparent cursor-pointer z-[-1]" />}
         <Sidebar />
@@ -172,7 +178,7 @@ export default function App() {
         {!isFullscreenView && (
           <header className="flex-shrink-0 mb-[0.5em]">
             <h2 className="text-[1.8em] font-bold tracking-tight mb-[0.1em] transition-all duration-300">
-              {activeTab === 'Dashboard' ? environmentName : activeTab}
+              {activeTab}
             </h2>
             <p className="opacity-60 text-[0.9em] font-medium transition-all duration-300">
               {getHeaderDescription()}
@@ -183,13 +189,11 @@ export default function App() {
         {/* Content Area */}
         <div className={`flex-1 w-full h-full custom-scrollbar ${isFullscreenView ? 'overflow-hidden rounded-[1.5em] shadow-2xl' : 'overflow-y-auto pb-2 pr-1'}`}>
           {isHome && <Home />}
-          {activeTab === 'Dashboard' && <Dashboard />}
           
           {/* Applications now has full control of its rendering space */}
           {activeTab === 'Applications' && <Applications />}
           
           {activeTab === 'Hyper-Link' && <HyperLinkView />} 
-          {activeTab === 'Widgets Core' && <WidgetsCore />}
           {activeTab === 'Processes' && <Processes />}
           {activeTab === 'Battery' && <Battery />}
           {activeTab === 'Services/Nodes' && <Services />}

@@ -168,6 +168,6 @@ export const useAppStore = create<AppState>()(
 
       setAppIdle: (id) => set((state) => ({ apps: state.apps.map(app => app.id === id ? { ...app, status: 'idle', pid: undefined, mode: 'balanced' } : app) }))
     }),
-    { name: 'hyper-realm-storage-v78' } // Bumped version to v78 to clear old cache conflicts
+    { name: 'hyper-realm-storage-v79' } // Bumped version to v79 to clear old cache conflicts and reflect removal of unused state if there was any
   )
 );
