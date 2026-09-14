@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ListOrdered, ChevronDown, ChevronUp, X } from 'lucide-react';
-import { useMusicStore } from '../../../../store/useMusicStore';
+import { useMusicStore } from "../store";
 
 export const UpNextQueue = () => {
   const { queue, playlist, removeFromQueue, clearQueue } = useMusicStore();

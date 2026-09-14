@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import path from "path"; // 👈 Path module import kiya
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
@@ -8,10 +9,11 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig(async () => ({
   plugins: [react()],
 
-  // Fix for jsmediatags Vite dependency scanning error
+  // Fix for jsmediatags Vite dependency scanning error & Path Aliases
   resolve: {
     alias: {
       'jsmediatags': 'jsmediatags/dist/jsmediatags.min.js',
+      '@': path.resolve(__dirname, './src'), // 🔥 Ab '@' likhte hi seedha 'src/' folder milega!
     },
   },
 

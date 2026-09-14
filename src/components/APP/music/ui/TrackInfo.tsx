@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Heart, ListPlus, Check } from 'lucide-react';
-import { Track, useMusicStore } from '../../../../store/useMusicStore';
+import { Track, useMusicStore } from "../store"
 import SleepTimerMenu from './SleepTimerMenu';
 
 export default function TrackInfo({ track }: { track: Track | null }) {

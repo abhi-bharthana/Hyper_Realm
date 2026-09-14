@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FolderSearch, History, ListMusic, Volume2, Plus, List, MoreVertical, X, FolderCog, Heart, RefreshCw } from 'lucide-react';
 // 🔥 Path Fix: musicCollection -> music -> APP -> components -> src -> store
-import { useMusicStore, Track, PlaylistData } from '../../../../store/useMusicStore';
+import { useMusicStore, Track, PlaylistData } from "../store"
 // 🔥 Path Fix: musicScanner ek folder piche (music folder) mein hai
 import { scanNativeDirectory } from '../musicScanner';
 

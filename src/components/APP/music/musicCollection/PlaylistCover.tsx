@@ -1,6 +1,6 @@
 import React from 'react';
 import { List } from 'lucide-react';
-import { Track } from '../../../../store/useMusicStore';
+import { Track } from "../store"
 
 interface Props {
   trackPaths: string[];

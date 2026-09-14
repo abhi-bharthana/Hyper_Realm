@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { useRecorderStore } from '../../../store/useRecorderStore';
+import { useRecorderStore } from "./store"; 
 import { WaveformVisualizer } from './WaveformVisualizer';
 import { LiveTranscript } from './LiveTranscript';
 

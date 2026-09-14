@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { useRecorderStore } from '../../../store/useRecorderStore';
+import { useRecorderStore } from "./store"; 
 
 export const WaveformVisualizer = () => {
   const { isRecording, volume, setVolume, addTranscript } = useRecorderStore();

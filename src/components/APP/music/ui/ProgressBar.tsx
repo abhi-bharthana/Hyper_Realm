@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Track, useMusicStore } from '../../../../store/useMusicStore';
+import { Track, useMusicStore } from "../store"
 
 const formatTime = (time: number) => {
   if (isNaN(time)) return '0:00';

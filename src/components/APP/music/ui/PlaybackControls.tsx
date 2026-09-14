@@ -1,6 +1,6 @@
 import React from 'react';
 import { Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, Repeat1 } from 'lucide-react';
-import { Track, useMusicStore } from '../../../../store/useMusicStore';
+import { Track, useMusicStore } from "../store"
 
 export default function PlaybackControls({ onNext, onPrev }: { onNext: () => void, onPrev: () => void }) {
   const { currentTrackIndex, isPlaying, togglePlay, isShuffle, toggleShuffle, repeatMode, toggleRepeat } = useMusicStore();

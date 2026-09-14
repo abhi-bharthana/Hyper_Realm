@@ -206,7 +206,7 @@ export const useMusicStore = create<MusicState>()(
     }),
     { 
       name: 'hyper-music-native-v7', // Bump to v7 for new timerHistory state
-      partialize: (state) => ({ 
+      partialze: (state) => ({ 
         savedDirectories: state.savedDirectories, 
         historyPaths: state.historyPaths, 
         playlists: state.playlists, 

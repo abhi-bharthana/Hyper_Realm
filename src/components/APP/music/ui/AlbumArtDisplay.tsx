@@ -1,6 +1,6 @@
 import React from 'react';
 import { Music2 } from 'lucide-react';
-import { Track } from '../../../../store/useMusicStore';
+import { Track } from "../store"
 
 interface Props {
   track: Track | null;

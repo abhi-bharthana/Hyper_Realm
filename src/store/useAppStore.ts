@@ -122,12 +122,15 @@ export const useAppStore = create<AppState>()(
       setEyeCareIntensity: (eyeCareIntensity) => set({ eyeCareIntensity }),
 
       launchApp: async (id) => {
-        // 🚀 ROUTE CHECKS PLACED AT THE TOP (Fixed blockage bug)
-        if (id === 'hyper-surf') { set({ activeTab: 'Hyper-Surf' }); return; }
-        if (id === 'hyper-media') { set({ activeTab: 'Hyper-Media' }); return; }
-        if (id === 'hyper-music') { set({ activeTab: 'Music' }); return; }
-        if (id === 'hyper-recorder') { set({ activeTab: 'AI Recorder' }); return; }
+        // 🔥 DYNAMIC INTERNAL APP ROUTING 🔥
+        // Ab hum registry (CORE_APPS) check kar rahe hain, manual hardcoding nahi.
+        const internalApp = CORE_APPS.find(app => app.id === id);
+        if (internalApp) { 
+          set({ activeTab: internalApp.title }); 
+          return; 
+        }
 
+        // External/Executable Apps ke liye fallback
         const appToLaunch = get().apps.find(a => a.id === id);
         if (!appToLaunch) return;
         
@@ -152,17 +155,19 @@ export const useAppStore = create<AppState>()(
 
       closeApp: (id) => {
         const { activeTab } = get();
-        if ((id === 'hyper-surf' && activeTab === 'Hyper-Surf') || 
-            (id === 'hyper-media' && activeTab === 'Hyper-Media') || 
-            (id === 'hyper-music' && activeTab === 'Music') ||
-            (id === 'hyper-recorder' && activeTab === 'AI Recorder')) {
+        
+        // 🔥 DYNAMIC CLOSE CHECK 🔥
+        const closingInternalApp = CORE_APPS.find(app => app.id === id);
+        
+        if (closingInternalApp && activeTab === closingInternalApp.title) {
            set({ activeTab: 'Applications' }); 
         }
+        
         get().setAppIdle(id);
       },
 
       setAppIdle: (id) => set((state) => ({ apps: state.apps.map(app => app.id === id ? { ...app, status: 'idle', pid: undefined, mode: 'balanced' } : app) }))
     }),
-    { name: 'hyper-realm-storage-v76' } 
+    { name: 'hyper-realm-storage-v78' } // Bumped version to v78 to clear old cache conflicts
   )
 );

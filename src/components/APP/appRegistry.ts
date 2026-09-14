@@ -1,39 +1,18 @@
 import { SystemAppExtended } from '../../store/useAppStore';
 
+// 🚀 Naye Plug-and-Play imports
+import { musicConfig } from './music/config';
+import { recorderConfig } from './recorder/config';
+
+// 🧩 Registry ab sirf configs ko combine kar rahi hai
 export const CORE_APPS: SystemAppExtended[] = [
   {
-    id: 'hyper-surf',
-    name: 'Hyper-Surf',
-    description: 'Native isolated web browsing environment with advanced controls.',
-    icon: 'Globe',
-    executable_path: 'internal://hyper-surf',
+    ...musicConfig,
     status: 'idle',
     mode: 'balanced'
   },
   {
-    id: 'hyper-media',
-    name: 'Hyper-Media',
-    description: 'High-performance local and stream video playback unit.',
-    icon: 'Film',
-    executable_path: 'internal://hyper-media',
-    status: 'idle',
-    mode: 'balanced'
-  },
-  {
-    id: 'hyper-music',
-    name: 'Music',
-    description: 'Native modular audio playback and library management.',
-    icon: 'Music',
-    executable_path: 'internal://hyper-music',
-    status: 'idle',
-    mode: 'balanced'
-  },
-  {
-    id: 'hyper-recorder',
-    name: 'AI Recorder',
-    description: 'Performance-optimized voice recording and real-time modular STT engine.',
-    icon: 'Mic',
-    executable_path: 'internal://hyper-recorder',
+    ...recorderConfig,
     status: 'idle',
     mode: 'balanced'
   }

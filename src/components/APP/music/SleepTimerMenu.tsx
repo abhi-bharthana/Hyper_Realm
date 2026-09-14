@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Moon, Clock, X, Zap, ShieldAlert } from 'lucide-react';
-import { useMusicStore } from '../../../store/useMusicStore';
+import { useMusicStore } from "./store";
 
 export default function SleepTimerMenu() {
   const { sleepTimer, setSleepTimer, cancelSleepTimer } = useMusicStore();

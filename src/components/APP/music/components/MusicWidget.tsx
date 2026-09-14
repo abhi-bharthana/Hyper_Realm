@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, SkipForward, SkipBack, Music2, Heart, ListOrdered, ChevronDown, X } from 'lucide-react';
-import { useMusicStore } from '../../store/useMusicStore';
-import { useAppStore } from '../../store/useAppStore';
+import { useMusicStore } from "../store";
+import { useAppStore } from '../../../../store/useAppStore';
 
 export default function MusicWidget() {
   const { 

@@ -1,14 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window'; 
+
+// 🚀 Core System Components
 import { Sidebar } from './components/Sidebar';
 import Home from './components/home/Home';
 import Dashboard from './components/Dashboard';
-import { Applications } from './components/Applications';
-import HyperSurf from './components/APP/HyperSurf';
-import VideoPlayer from './components/APP/VideoPlayer'; 
-import MusicApp from './components/APP/music/MusicApp'; 
-import GlobalAudioEngine from './components/APP/music/GlobalAudioEngine';
+import { Applications } from './components/APP/launcher/Applications'; // 🔥 Updated Path
 import Processes from './components/Settings/Processes';
 import Battery from './components/Settings/Battery';
 import Services from './components/Services';
@@ -17,9 +15,15 @@ import Profile from './components/Settings/profile';
 import Settings from './components/Settings';
 import WidgetsCore from './components/Settings/WidgetsCore';
 import HyperLinkView from './components/hyperlink/HyperLinkView'; 
+
+// 🎵 Global Services (Kept direct because it runs in background)
+import GlobalAudioEngine from './components/APP/music/GlobalAudioEngine';
+
+// 🔥 DYNAMIC REGISTRY IMPORT 🔥
+import { CORE_APPS } from './components/APP/appRegistry';
+
 import { useAppStore } from './store/useAppStore';
 import { useSidebarStore } from './store/useSidebarStore'; 
-import { RecorderApp } from './components/APP/recorder/RecorderApp';
 
 export default function App() {
   const { 
@@ -29,6 +33,13 @@ export default function App() {
   } = useAppStore();
 
   const { isSidebarCollapsed, isSidebarAutoHide } = useSidebarStore();
+
+  // =========================================================================
+  // 🔥 DYNAMIC APP RESOLVER (Finds active app from registry)
+  // =========================================================================
+  const activeAppConfig = useMemo(() => {
+    return CORE_APPS.find(app => app.title === activeTab);
+  }, [activeTab]);
 
   useEffect(() => {
     let unlisten: Promise<() => void>;
@@ -87,11 +98,14 @@ export default function App() {
   }, []);
 
   // =========================================================================
-  // 🔥 SMART MANIFEST ROUTING: Isolates the specific app based on Vite Env
+  // 🌐 SMART MANIFEST ROUTING: Isolates the specific app based on Vite Env
   // =========================================================================
   const appTarget = import.meta.env.VITE_APP_TARGET;
 
   if (appTarget) {
+    // Dynamically find component for the standalone window
+    const TargetComponent = CORE_APPS.find(app => app.id === appTarget)?.component;
+
     return (
       <div className="h-screen w-screen overflow-hidden flex relative font-sans selection:bg-blue-500/30 transition-all duration-700 ease-in-out bg-slate-50 dark:bg-[#0a0a0c] text-slate-900 dark:text-zinc-100">
         <style>{`
@@ -123,26 +137,23 @@ export default function App() {
           />
         )}
 
-        {/* Load specific app dynamically */}
-        {appTarget === 'music' && (
-          <>
-            <GlobalAudioEngine />
-            <MusicApp />
-          </>
-        )}
-        {appTarget === 'video' && <VideoPlayer />}
-        {appTarget === 'recorder' && <RecorderApp />}
+        {/* Global engine specifically for music target */}
+        {appTarget === 'hyper-music' && <GlobalAudioEngine />}
+        
+        {/* 🔥 DYNAMIC COMPONENT RENDER 🔥 */}
+        {TargetComponent ? <TargetComponent /> : <div className="text-white p-4">App Module Not Found</div>}
       </div>
     );
   }
   // =========================================================================
 
   const getHeaderDescription = () => {
+    // 🚀 Dynamic App Description Fallback
+    if (activeAppConfig) return activeAppConfig.description;
+
+    // Static System Route Descriptions
     switch (activeTab) {
       case 'Applications': return "Select an environment module to launch into isolated space.";
-      case 'Hyper-Surf': return "Native isolated web browsing environment.";
-      case 'Hyper-Media': return "System video directory scanner and playback unit."; 
-      case 'Music': return "Native modular audio playback and library management."; 
       case 'Widgets Core': return "Granular telemetry and standalone module orchestration.";
       case 'Hyper-Link': return "Seamless connectivity, global cloud tunnels, and local network bridges."; 
       case 'Processes': return "Live system metrics and resource consumption.";
@@ -155,7 +166,7 @@ export default function App() {
   };
 
   const isHome = activeTab === 'Home';
-  const isAppView = ['Hyper-Surf', 'Hyper-Media', 'Music', 'AI Recorder'].includes(activeTab);
+  const isAppView = !!activeAppConfig; // 🔥 True if any registry app is active
   
   const isFullscreenView = isHome || isAppView || activeTab === 'Node Settings';
   
@@ -245,21 +256,21 @@ export default function App() {
         )}
         
         <div className={`flex-1 w-full h-full custom-scrollbar ${isFullscreenView ? 'overflow-hidden rounded-[1.5em] shadow-2xl' : 'overflow-y-auto pb-2 pr-1'}`}>
+          {/* Static System Routes */}
           {isHome && <Home />}
           {activeTab === 'Dashboard' && <Dashboard />}
           {activeTab === 'Applications' && <Applications />}
-          {activeTab === 'Hyper-Surf' && <HyperSurf />}
           {activeTab === 'Hyper-Link' && <HyperLinkView />} 
           {activeTab === 'Widgets Core' && <WidgetsCore />}
-          {activeTab === 'Hyper-Media' && <VideoPlayer />}
-          {activeTab === 'AI Recorder' && <RecorderApp />}
-          {activeTab === 'Music' && <MusicApp />} 
           {activeTab === 'Processes' && <Processes />}
           {activeTab === 'Battery' && <Battery />}
           {activeTab === 'Services/Nodes' && <Services />}
           {activeTab === 'Libraries/Packages' && <Libraries />}
           {activeTab === 'Profile' && <Profile />}
           {activeTab === 'Node Settings' && <Settings />}
+
+          {/* 🔥 DYNAMIC APP ROUTING 🔥 */}
+          {activeAppConfig && <activeAppConfig.component />}
         </div>
       </main>
     </div>

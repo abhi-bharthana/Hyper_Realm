@@ -2,7 +2,7 @@ import React from 'react';
 import { LayoutGrid, Globe, Music, Video } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { OptionButton } from './Shared';
-import { AppCard } from '../AppCard';
+import { AppCard } from "../APP/launcher/AppCard";
 
 export function AppDrawerSection() {
   const { 

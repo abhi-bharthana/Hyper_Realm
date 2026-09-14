@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useMusicStore } from '../../../store/useMusicStore';
+import { useMusicStore } from './store';
 
 export default function GlobalAudioEngine() {
   const audioRef = useRef<HTMLAudioElement>(null);

@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { useMusicStore } from '../../../store/useMusicStore';
+import { useMusicStore } from "./store";
 import { useKeyboardControls } from './hooks/useKeyboardControls';
 import { useGalleryPhysics } from './hooks/useGalleryPhysics';
 import ProgressBar from './ui/ProgressBar';

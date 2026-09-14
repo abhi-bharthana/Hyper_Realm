@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { useMusicStore } from '../../../../store/useMusicStore';
+import { useMusicStore } from "../store";
 
 export const useGalleryPhysics = (containerRef: React.RefObject<HTMLDivElement>) => {
   const { playlist, currentTrackIndex, playTrack } = useMusicStore();

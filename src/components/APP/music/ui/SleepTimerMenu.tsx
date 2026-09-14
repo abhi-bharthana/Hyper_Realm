@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Moon, Clock, X, Zap, ShieldAlert, Sparkles } from 'lucide-react';
-import { useMusicStore } from '../../../../store/useMusicStore';
+import { useMusicStore } from "../store";
 
 export default function SleepTimerMenu() {
   // Fallback to empty array if timerHistory isn't initialized in old store versions

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { open } from '@tauri-apps/plugin-dialog';
 import { Loader2, FolderPlus, FolderCog, HardDrive, Trash2 } from 'lucide-react';
-import { useMusicStore } from '../../../../store/useMusicStore';
+import { useMusicStore } from "../store";
 import { scanNativeDirectory } from '../musicScanner';
 
 export const FolderManager = () => {

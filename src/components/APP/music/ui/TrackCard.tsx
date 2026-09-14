@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Heart } from 'lucide-react';
-import { Track, useMusicStore } from '../../../../store/useMusicStore';
+import { Track, useMusicStore } from "../store"
 import AlbumArtDisplay from './AlbumArtDisplay';
 import TrackInfo from './TrackInfo';
 

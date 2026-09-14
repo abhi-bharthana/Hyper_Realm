@@ -7,7 +7,7 @@ import { readDir } from '@tauri-apps/plugin-fs';
 import MusicPlayerUI from './MusicPlayerUI';
 import MusicCollection from './musicCollection/MusicCollection';
 import SleepTimerEngine from './SleepTimerEngine';
-import { useMusicStore } from '../../../store/useMusicStore';
+import { useMusicStore } from './store';
 import { SourceToggle } from '../../Shared/SourceToggle';
 import { GlobalProfileModal } from '../../Shared/GlobalProfileModal';
 

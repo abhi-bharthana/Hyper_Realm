@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { listen } from '@tauri-apps/api/event';
-import { useRecorderStore } from '../../../store/useRecorderStore';
+import { useRecorderStore } from "./store"; 
 
 export const LiveTranscript = () => {
   const { transcripts, addTranscript } = useRecorderStore();

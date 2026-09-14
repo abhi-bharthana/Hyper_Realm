@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Settings, X } from 'lucide-react';
 import HomeSettings from './HomeSettings';
-import MusicWidget from '../widgets/MusicWidget';
+import MusicWidget from '../APP/music/components/MusicWidget';
 import { useAppStore } from '../../store/useAppStore';
 
 export default function Home() {

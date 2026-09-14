@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useMusicStore } from '../../../../store/useMusicStore';
+import { useMusicStore } from "../store";
 
 export const useKeyboardControls = (onNext?: () => void, onPrev?: () => void) => {
   const { nextTrack, prevTrack } = useMusicStore();

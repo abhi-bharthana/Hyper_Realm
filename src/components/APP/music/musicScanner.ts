@@ -1,5 +1,5 @@
 import { invoke, convertFileSrc } from '@tauri-apps/api/core';
-import { Track } from '../../../store/useMusicStore';
+import { Track } from "./store"
 
 export const scanNativeDirectory = async (dirPath: string): Promise<Track[]> => {
   try {

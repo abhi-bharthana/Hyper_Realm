@@ -1,3 +1,4 @@
+// src/components/APP/recorder/store.ts
 import { create } from 'zustand';
 
 interface TranscriptItem {
@@ -8,11 +9,11 @@ interface TranscriptItem {
 
 interface RecorderState {
   isRecording: boolean;
-  isTranscriptEnabled: boolean; // 🚀 Naya state
+  isTranscriptEnabled: boolean; 
   volume: number;
   transcripts: TranscriptItem[];
   setRecording: (isRecording: boolean) => void;
-  setTranscriptEnabled: (enabled: boolean) => void; // 🚀 Naya setter
+  setTranscriptEnabled: (enabled: boolean) => void; 
   setVolume: (volume: number) => void;
   addTranscript: (text: string) => void;
   clearSession: () => void;
@@ -20,7 +21,7 @@ interface RecorderState {
 
 export const useRecorderStore = create<RecorderState>((set) => ({
   isRecording: false,
-  isTranscriptEnabled: true, // Default ON rahega
+  isTranscriptEnabled: true, 
   volume: 0,
   transcripts: [],
   

@@ -64,18 +64,6 @@ pub fn run() {
             apps::manager::commands::launch_app_cmd,
             apps::manager::commands::fetch_running_apps,
             
-            // 🎬 Video Commands
-            #[cfg(feature = "video-app")]
-            apps::video::commands::load_video,
-            #[cfg(feature = "video-app")]
-            apps::video::commands::play_video,
-            
-            // 🌐 Browser Commands
-            #[cfg(feature = "browser-app")]
-            apps::browser::commands::open_url,
-            #[cfg(feature = "browser-app")]
-            apps::browser::commands::format_search_query,
-            
             // 🎵 Music Commands (Sirf Scanner aur Permissions, No Native Player!)
             #[cfg(feature = "music-app")]
             apps::music::commands::scan_music_directory,
