@@ -12,25 +12,24 @@ export function NavItem({ icon, label, active = false, collapsed = false, densit
   };
 
   return (
-    // 🔥 Added hover:z-50 taaki uchalta hua icon apne neighbors ke UPAR aaye, unke peeche nahi dabe!
     <div className="relative group flex items-center justify-center w-full hover:z-50">
       
       <button 
         onClick={onClick} 
-        // 🔥 REMOVED 'overflow-hidden' from here too!
-        // 🔥 Brightened text: 'dark:text-zinc-300' so inactive icons are super visible
         className={`relative flex items-center rounded-2xl transition-all duration-300 ease-out w-full ${getVerticalPadding()} ${
           collapsed ? 'justify-center px-0' : 'px-3'
         } ${
           active 
-            ? 'bg-black/10 dark:bg-white/15 text-black dark:text-white font-bold shadow-sm' 
+            /* 🔥 FIX: Yahan se 'bg-black/10 dark:bg-white/15' aur 'shadow-sm' hata diya! 
+               Ab sirf text color highlight hoga aur left side ka blue bar dikhega */
+            ? 'text-black dark:text-white font-bold' 
             : 'text-neutral-500 dark:text-zinc-300 hover:bg-black/5 dark:hover:bg-white/10 hover:text-black dark:hover:text-white'
         }`}
       >
-        <div className={`absolute left-0 w-1 bg-blue-500 rounded-r-full transition-all duration-300 ease-out ${active ? 'h-1/2 opacity-100' : 'h-0 opacity-0'}`} />
+        {/* Ye raha wo patla sa blue bar jo active hone par dikhega */}
+        <div className={`absolute left-0 w-[3px] bg-blue-500 rounded-r-full transition-all duration-300 ease-out ${active ? 'h-1/2 opacity-100' : 'h-0 opacity-0'}`} />
         
-        {/* 🔥 macOS Pop Effect: group-hover:scale-[1.4] & group-hover:-translate-y-1.5 */}
-        <span className={`shrink-0 flex items-center justify-center w-10 h-10 transition-all duration-300 relative z-10 
+        <span className={`shrink-0 flex items-center justify-center w-9 h-9 transition-all duration-300 relative z-10 
           ${!active ? 'ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-[1.4] group-hover:-translate-y-1.5 group-hover:drop-shadow-[0_8px_12px_rgba(0,0,0,0.5)]' : 'scale-110 drop-shadow-md text-blue-500'}
         `}>
           {icon}
@@ -39,9 +38,8 @@ export function NavItem({ icon, label, active = false, collapsed = false, densit
           )}
         </span>
         
-        {/* Text Label - Yahan overflow-hidden chhodna sahi hai varna text bahar failega */}
-        <span className={`font-medium tracking-wide whitespace-nowrap flex-1 flex justify-between items-center text-left text-[13px] transition-all duration-300 ease-in-out ${
-          collapsed ? 'w-0 opacity-0 ml-0 overflow-hidden' : 'w-[130px] opacity-100 ml-2 overflow-hidden'
+        <span className={`font-medium tracking-wide whitespace-nowrap flex justify-between items-center text-left text-[13px] transition-all duration-300 ease-in-out overflow-hidden ${
+          collapsed ? 'absolute opacity-0 w-0 pointer-events-none' : 'relative flex-1 w-[130px] opacity-100 ml-2'
         }`}>
           <span className="truncate flex items-center gap-2">
             {label}

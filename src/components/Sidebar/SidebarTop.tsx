@@ -1,11 +1,11 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight, Zap } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import { useSidebarStore } from '../../store/useSidebarStore'; // 🔥 Added SidebarStore
+import { useSidebarStore } from '../../store/useSidebarStore';
 
 export function SidebarTop() {
   const { setActiveTab } = useAppStore();
-  const { isSidebarCollapsed, toggleSidebar } = useSidebarStore(); // 🔥 From new store
+  const { isSidebarCollapsed, toggleSidebar } = useSidebarStore();
 
   return (
     <div className="flex flex-col items-center w-full mb-6">
@@ -21,11 +21,12 @@ export function SidebarTop() {
         onClick={() => setActiveTab('Home')}
         className={`flex items-center overflow-hidden cursor-pointer group w-full ${isSidebarCollapsed ? 'justify-center' : 'justify-start px-2'}`}
       >
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-neutral-700 to-neutral-900 dark:from-neutral-800 dark:to-black flex items-center justify-center shadow-lg border border-white/10 shrink-0 group-hover:scale-110 transition-transform duration-[400ms] ease-out">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-neutral-700 to-neutral-900 dark:from-neutral-800 dark:to-black flex items-center justify-center shadow-lg border border-white/10 shrink-0 group-hover:scale-110 transition-transform duration-[400ms] ease-out">
           <Zap size={20} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
         </div>
         
-        <div className={`overflow-hidden whitespace-nowrap transition-all duration-[400ms] ease-in-out ${isSidebarCollapsed ? 'w-0 opacity-0 ml-0' : 'w-[110px] opacity-100 ml-3'}`}>
+        {/* 🔥 FIX: absolute on collapse to avoid pushing logo */}
+        <div className={`overflow-hidden whitespace-nowrap transition-all duration-[400ms] ease-in-out ${isSidebarCollapsed ? 'absolute opacity-0 w-0 pointer-events-none' : 'relative w-[110px] opacity-100 ml-3'}`}>
           <h1 className="text-[14px] font-bold tracking-wide text-neutral-900 dark:text-white group-hover:text-blue-500 transition-colors leading-tight">
             Hyper_Realm
           </h1>

@@ -4,16 +4,15 @@ import {
   Activity, BatteryMedium, UserCircle, Globe, Music, Video, Link, Mic 
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import { useSidebarStore } from '../../store/useSidebarStore'; // 🔥 Sidebar store imported
+import { useSidebarStore } from '../../store/useSidebarStore'; 
 import { NavItem } from './NavItem';
 
 export function SidebarNav() {
   const { activeTab, setActiveTab, isSidebarCollapsed, uiDensity, apps, launchApp, closeApp } = useAppStore();
-  const { items } = useSidebarStore(); // 🔥 Fetching items from sidebar store
+  const { items } = useSidebarStore(); 
 
   const getIconSize = () => 18;
 
-  // Helper to check if item is enabled in sidebar store
   const isVisible = (id: string) => {
     const item = items.find(i => i.id === id);
     return item ? item.isVisible : true;
@@ -39,7 +38,8 @@ export function SidebarNav() {
   };
 
   return (
-    <nav className="flex-1 space-y-1.5 overflow-y-auto w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-2 flex flex-col items-center">
+    <nav className="flex-1 space-y-1.5 overflow-y-auto w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-0 flex flex-col items-center">
+      {/* 🔥 FIX: 'px-2' ko 'px-0' kar diya taaki icons ghute hue na lagein */}
       
       {/* 🟢 TOP APPS */}
       {isVisible('apps') && <NavItem icon={<AppWindow size={getIconSize()} />} label="Applications" active={activeTab === 'Applications'} collapsed={isSidebarCollapsed} density={uiDensity} onClick={() => setActiveTab('Applications')} />}
