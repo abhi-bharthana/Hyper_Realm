@@ -1,11 +1,9 @@
 use std::sync::Mutex;
 use sysinfo::System;
 
-// 🚀 Naye Imports Recorder aur AudioCapture ke liye
+// 🚀 Naye Imports Recorder App ke liye (AI aur Whisper ab permanently hata diya hai)
 #[cfg(feature = "recorder-app")]
-use crate::services::ai_runtime::capture::AudioCapture;
-#[cfg(feature = "recorder-app")]
-use crate::services::ai_runtime::commands::RecorderState;
+use crate::apps::recorder::commands::RecorderAppState;
 
 pub mod apps;     
 pub mod server;   
@@ -38,10 +36,10 @@ pub fn run() {
             process: Mutex::new(None),
         });
 
-    // 2. 🎙️ Asli AudioCapture State ko isolate kiya
+    // 2. 🎙️ Naya Recorder State Inject karo (No AI, pure native audio recorder)
     #[cfg(feature = "recorder-app")]
     {
-        builder = builder.manage(RecorderState(Mutex::new(AudioCapture::new())));
+        builder = builder.manage(RecorderAppState::default());
     }
 
     // 🚀 DHYAN DE: Yahan se 'NativeAudioPlayer' wala code hamesha ke liye delete kar diya hai.
@@ -70,11 +68,13 @@ pub fn run() {
             #[cfg(feature = "music-app")]
             apps::music::commands::request_audio_permissions,
 
-            // 🎙️ AI Recorder & STT Commands
+            // 🎙️ Clean Recorder Commands (Naya AI-Free Setup)
             #[cfg(feature = "recorder-app")]
-            services::ai_runtime::commands::start_recording,
+            apps::recorder::commands::start_recording,
             #[cfg(feature = "recorder-app")]
-            services::ai_runtime::commands::stop_recording,
+            apps::recorder::commands::pause_recording,
+            #[cfg(feature = "recorder-app")]
+            apps::recorder::commands::stop_recording,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -1,42 +1,24 @@
-// src/components/APP/recorder/store.ts
 import { create } from 'zustand';
-
-interface TranscriptItem {
-  id: string;
-  text: string;
-  timestamp: string;
-}
 
 interface RecorderState {
   isRecording: boolean;
-  isTranscriptEnabled: boolean; 
-  volume: number;
-  transcripts: TranscriptItem[];
-  setRecording: (isRecording: boolean) => void;
-  setTranscriptEnabled: (enabled: boolean) => void; 
-  setVolume: (volume: number) => void;
-  addTranscript: (text: string) => void;
-  clearSession: () => void;
+  isPaused: boolean;
+  duration: number; // in seconds
+  startRecording: () => void;
+  pauseRecording: () => void;
+  resumeRecording: () => void;
+  stopRecording: () => void;
+  tick: () => void; // timer badhane ke liye
 }
 
 export const useRecorderStore = create<RecorderState>((set) => ({
   isRecording: false,
-  isTranscriptEnabled: true, 
-  volume: 0,
-  transcripts: [],
+  isPaused: false,
+  duration: 0,
   
-  setRecording: (isRecording) => set({ isRecording }),
-  setTranscriptEnabled: (isTranscriptEnabled) => set({ isTranscriptEnabled }),
-  setVolume: (volume) => set({ volume }),
-  addTranscript: (text) => set((state) => ({
-    transcripts: [
-      ...state.transcripts,
-      {
-        id: Math.random().toString(36).substring(7),
-        text,
-        timestamp: new Date().toLocaleTimeString(),
-      },
-    ],
-  })),
-  clearSession: () => set({ transcripts: [], volume: 0 }),
+  startRecording: () => set({ isRecording: true, isPaused: false, duration: 0 }),
+  pauseRecording: () => set({ isPaused: true }),
+  resumeRecording: () => set({ isPaused: false }),
+  stopRecording: () => set({ isRecording: false, isPaused: false, duration: 0 }),
+  tick: () => set((state) => ({ duration: state.duration + 1 })),
 }));
