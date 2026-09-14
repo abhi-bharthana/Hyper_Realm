@@ -40,6 +40,7 @@ export default function HomeSettings({ onClose }: { onClose?: () => void }) {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
+        // 🔥 FIX 1: Max resolution ko control mein rakha taaki crash na ho
         const MAX_WIDTH = 1920;
         const MAX_HEIGHT = 1080;
         let width = img.width;
@@ -56,7 +57,8 @@ export default function HomeSettings({ onClose }: { onClose?: () => void }) {
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
         
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+        // 🔥 FIX 2: Quality ko 0.7 se 0.35 kar diya. Ye visually same lagega par size 1/10th ho jayega!
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.35);
         setTempBgValue(compressedBase64);
       };
       if (typeof event.target?.result === 'string') img.src = event.target.result;

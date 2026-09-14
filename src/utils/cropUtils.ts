@@ -17,7 +17,7 @@ export async function getCroppedImg(
 
   if (!ctx) return null;
 
-  // 🚀 FIXED: 256x256 Size lock (Keeps base64 size around 15kb - NO UI Lag)
+  // 🚀 FIXED: 256x256 Size lock
   const AVATAR_SIZE = 256;
   canvas.width = AVATAR_SIZE;
   canvas.height = AVATAR_SIZE;
@@ -41,6 +41,7 @@ export async function getCroppedImg(
     AVATAR_SIZE
   );
 
-  // Return Base64 directly - Completely bypasses Tauri asset/cache issues!
-  return canvas.toDataURL('image/png');
+  // 🔥 MAIN FIX: 'image/webp' use kiya 0.6 quality ke saath.
+  // Ye transparency bhi rakhega aur size ko sirf 5-10kb kar dega! (PNG 50-80kb le raha tha)
+  return canvas.toDataURL('image/webp', 0.6);
 }

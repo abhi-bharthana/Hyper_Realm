@@ -122,15 +122,12 @@ export const useAppStore = create<AppState>()(
       setEyeCareIntensity: (eyeCareIntensity) => set({ eyeCareIntensity }),
 
       launchApp: async (id) => {
-        // 🔥 DYNAMIC INTERNAL APP ROUTING 🔥
-        // Ab hum registry (CORE_APPS) check kar rahe hain, manual hardcoding nahi.
         const internalApp = CORE_APPS.find(app => app.id === id);
         if (internalApp) { 
           set({ activeTab: internalApp.title }); 
           return; 
         }
 
-        // External/Executable Apps ke liye fallback
         const appToLaunch = get().apps.find(a => a.id === id);
         if (!appToLaunch) return;
         
@@ -155,8 +152,6 @@ export const useAppStore = create<AppState>()(
 
       closeApp: (id) => {
         const { activeTab } = get();
-        
-        // 🔥 DYNAMIC CLOSE CHECK 🔥
         const closingInternalApp = CORE_APPS.find(app => app.id === id);
         
         if (closingInternalApp && activeTab === closingInternalApp.title) {
@@ -168,6 +163,12 @@ export const useAppStore = create<AppState>()(
 
       setAppIdle: (id) => set((state) => ({ apps: state.apps.map(app => app.id === id ? { ...app, status: 'idle', pid: undefined, mode: 'balanced' } : app) }))
     }),
-    { name: 'hyper-realm-storage-v79' } // Bumped version to v79 to clear old cache conflicts and reflect removal of unused state if there was any
+    { 
+      name: 'hyper-realm-storage-v80', // Version bumped
+      partialize: (state) => {
+        const { apps, ...serializableState } = state;
+        return serializableState;
+      }
+    } 
   )
 );
