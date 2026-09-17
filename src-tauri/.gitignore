@@ -10,3 +10,9 @@ releases/
 keys/
 scripts/.android_bin/
 src-tauri/gen/
+
+# Heavy AI Models & Executables
+*.safetensors
+*.bin
+*.exe
+src-tauri/resources/models/
