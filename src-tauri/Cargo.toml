@@ -25,6 +25,8 @@ rand = "=0.8.8"
 rand_core = "=0.6.4"
 rand_distr = "=0.4.3"
 
+# 🧠 THE FIX: Tantivy 0.22 automatically resolves Windows zstd-safe C-binding errors!
+tantivy = "0.22"
 
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
@@ -47,15 +49,15 @@ parking_lot = "0.12"
 crossbeam-channel = "0.5"
 chrono = "0.4"
 
-# 🧠 AI Runtime
-candle-core = { version = "0.8.4", optional = true }
-candle-nn = { version = "0.8.4", optional = true }
-candle-transformers = { version = "0.8.4", optional = true }
-safetensors = { version = "0.4.5", optional = true }
-tokenizers = { version = "0.20.4", default-features = false, optional = true }
-hf-hub = { version = "0.3.2", default-features = false, features = ["tokio"], optional = true }
-rayon = "1.12.0"
-tauri-plugin-os = "2.3.2"
+# 🧠 AI Runtime (Ab globally available for Hyper Sense Hybrid Search)
+candle-core = { version = "0.8.4", default-features = false }
+candle-nn = { version = "0.8.4", default-features = false }
+candle-transformers = { version = "0.8.4", default-features = false }
+safetensors = "0.4.5"
+tokenizers = "0.20.4" 
+hf-hub = { version = "0.3.2", default-features = false, features = ["tokio"] }
+rayon = "1.12.0"          # 🔥 Wapas add kiya
+tauri-plugin-os = "2.3.2" # 🔥 Wapas add kiya
 
 # 🔥 THE FIX: Battery crate sirf Desktop (Windows/Linux/Mac) par load hoga
 [target.'cfg(not(target_os = "android"))'.dependencies]
@@ -63,7 +65,7 @@ battery = "0.7"
 
 [profile.release]
 codegen-units = 1
-lto = false      # 🔥 FIX 1: Windows-to-Android cross-compile ke liye off
+lto = false       # 🔥 FIX 1: Windows-to-Android cross-compile ke liye off
 opt-level = "s"
 strip = false    # 🔥 FIX 2: Linker crash rokne ke liye off
 panic = "abort"
@@ -73,11 +75,4 @@ default = ["music-app", "video-app", "browser-app"]
 music-app = []
 video-app = []
 browser-app = []
-recorder-app = [
-    "candle-core",
-    "candle-nn",
-    "candle-transformers",
-    "safetensors",
-    "tokenizers",
-    "hf-hub"
-]
+recorder-app = []

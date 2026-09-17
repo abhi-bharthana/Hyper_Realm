@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { 
   ChevronDown, ChevronUp, Battery as BatteryIcon, 
-  Palette, MonitorSmartphone, PanelLeft, AppWindow, Search 
+  Palette, MonitorSmartphone, PanelLeft, AppWindow, Search, 
+  Database // 🔥 Database icon for Indexing
 } from 'lucide-react';
 
 import { AppearanceSection } from './AppearanceSection';
@@ -11,6 +12,8 @@ import { SidebarSection } from './SidebarSection';
 import { AboutHyperRealm } from './about';
 import Profile from './profile';
 import Battery from './Battery';
+// 🔥 FIX: Updated import to our new advanced IndexingManager
+import { IndexingManager } from './IndexingManager'; 
 
 const CollapsibleSection = ({ title, icon: Icon, children, isOpen, onToggle, isLast = false }: any) => {
   return (
@@ -52,6 +55,8 @@ export default function Settings() {
 
   const SETTINGS_SECTIONS = useMemo(() => [
     { id: "Appearance & Preview", icon: Palette, component: <AppearanceSection searchQuery={searchQuery} />, keywords: "theme color dark mode light mode ui aesthetic" },
+    // 🔥 FIX: Replaced old component with IndexingManager
+    { id: "AI Indexing & Search", icon: Database, component: <IndexingManager />, keywords: "ai index search semantic smart database scan music brain vector speed" },
     { id: "Power & Battery", icon: BatteryIcon, component: <Battery />, keywords: "energy usage performance node active charging power saver eco" },
     { id: "Interface Options", icon: MonitorSmartphone, component: <InterfaceSection searchQuery={searchQuery} />, keywords: "scale text font size zoom eye care filter display typography" },
     { id: "App Drawer", icon: AppWindow, component: <AppDrawerSection searchQuery={searchQuery} />, keywords: "grid icons spacing launcher app names size" },
@@ -109,7 +114,6 @@ export default function Settings() {
         {/* ========================================== */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
           
-          {/* 🔥 FIX: Changed col-span-4 to col-span-5 so the left side is slightly wider and elements don't get squished */}
           <div className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-8">
             {!searchQuery.trim() && (
               <div className="w-full">

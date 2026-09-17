@@ -18,6 +18,9 @@ import HyperLinkView from './components/hyperlink/HyperLinkView';
 import GlobalAudioEngine from './components/APP/music/GlobalAudioEngine';
 import SleepTimerEngine from './components/APP/music/SleepTimerEngine';
 
+// 🧠 HYPER SENSE GLOBAL PALETTE
+import { HyperSensePalette } from './components/services/hyper_sense/HyperSensePalette';
+
 // 🔥 DYNAMIC REGISTRY IMPORT
 import { CORE_APPS } from './components/APP/appRegistry';
 
@@ -121,6 +124,9 @@ export default function App() {
           <div className="fixed inset-0 z-[99999] pointer-events-none mix-blend-multiply transition-opacity duration-700" style={{ backgroundColor: '#ff8c00', opacity: eyeCareIntensity / 100 }} />
         )}
         
+        {/* 🧠 HYPER SENSE ADDED YAHAN (For Isolated Windows) */}
+        <HyperSensePalette />
+
         {/* 🔥 BOTH ENGINES IN BACKGROUND OF APP WINDOW */}
         {appTarget === 'hyper-music' && (
           <>
@@ -161,6 +167,9 @@ export default function App() {
       }`}
       style={ showCustomBg ? { backgroundColor: homeBackgroundType === 'solid' ? homeBackgroundValue : 'transparent', backgroundImage: homeBackgroundType === 'gradient' ? homeBackgroundValue : (homeBackgroundType === 'image' ? `url(${homeBackgroundValue})` : 'none'), backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' } : {} }
     >
+      {/* 🧠 HYPER SENSE ADDED YAHAN (For Main Workspace Window) */}
+      <HyperSensePalette />
+
       {/* 🚀 ENGINES LOADED GLOBALLY FOR MAIN WINDOW */}
       <GlobalAudioEngine />
       <SleepTimerEngine />

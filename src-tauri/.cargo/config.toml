@@ -1,5 +1,14 @@
+[build]
+# Yeh Rust ko allow karega ki wo ARM64 ke AI math instructions (fp16) use kar sake
+rustflags = ["-C", "target-feature=+fp16"]
+
+[target.aarch64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+fp16"]
+
 [target.aarch64-linux-android]
 linker = "C:/Users/Abhi/AppData/Local/Android/Sdk/ndk/26.1.10909125/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android24-clang.cmd"
+# 🔥 AI Fix merged in the same target block!
+rustflags = ["-C", "target-feature=+fp16"]
 
 [target.armv7-linux-androideabi]
 linker = "C:/Users/Abhi/AppData/Local/Android/Sdk/ndk/26.1.10909125/toolchains/llvm/prebuilt/windows-x86_64/bin/armv7a-linux-androideabi24-clang.cmd"

@@ -24,6 +24,15 @@ pub fn run() {
         crate::server::manager::start_axum_server(server_port).await;
     });
 
+    // 🧠 HYPER SENSE ENGINE SETUP
+    // Temporary ya local directory mein index store karne ke liye
+    let hyper_sense_path = std::env::temp_dir().join("hyper_sense_index"); 
+    let _ = std::fs::create_dir_all(&hyper_sense_path);
+    
+    // Schema build karke Engine initialize karna
+    let schema = crate::services::hyper_sense::build_schema();
+    let hyper_sense_engine = crate::services::hyper_sense::engine::HyperSenseEngine::new(&hyper_sense_path, schema);
+
     // 1. Basic Builder Setup
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
@@ -34,7 +43,9 @@ pub fn run() {
         .manage(SysState(Mutex::new(System::new_all())))
         .manage(services::cloud::cloud_cmd::CloudTunnelState {
             process: Mutex::new(None),
-        });
+        })
+        // 🧠 Hyper Sense ki state Tauri builder mein inject kar di
+        .manage(Mutex::new(hyper_sense_engine));
 
     // 2. 🎙️ Naya Recorder State Inject karo (No AI, pure native audio recorder)
     #[cfg(feature = "recorder-app")]
@@ -57,6 +68,9 @@ pub fn run() {
             // Cloud Services (Core)
             services::cloud::cloud_cmd::start_cloud_tunnel,
             services::cloud::cloud_cmd::stop_cloud_tunnel,
+
+            // 🧠 Hyper Sense Search Command (Nayi service link ho gayi!)
+            services::hyper_sense::commands::search_hypersense,
 
             // App Services (Core)
             apps::manager::commands::launch_app_cmd,
