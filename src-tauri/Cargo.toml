@@ -25,6 +25,7 @@ rand = "=0.8.8"
 rand_core = "=0.6.4"
 rand_distr = "=0.4.3"
 
+
 # 🧠 THE FIX: Tantivy 0.22 automatically resolves Windows zstd-safe C-binding errors!
 tantivy = "0.22"
 
