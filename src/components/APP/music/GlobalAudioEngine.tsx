@@ -1,12 +1,27 @@
 import { useEffect, useRef } from 'react';
 import { useMusicStore } from './store';
+import { useKeyboardControls } from './hooks/useKeyboardControls'; // 👈 Hook import kiya
 
 export default function GlobalAudioEngine() {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const { playlist, currentTrackIndex, isPlaying, nextTrack, prevTrack, setIsPlaying } = useMusicStore();
+  
+  // 👈 isMuted aur repeatMode ko store se extract kiya
+  const { 
+    playlist, 
+    currentTrackIndex, 
+    isPlaying, 
+    nextTrack, 
+    prevTrack, 
+    setIsPlaying,
+    isMuted, 
+    repeatMode 
+  } = useMusicStore();
   
   const currentTrack = currentTrackIndex !== null ? playlist[currentTrackIndex] : null;
   const SERVER_PORT = import.meta.env.VITE_SERVER_PORT || (import.meta.env.VITE_APP_TARGET === 'music' ? 8765 : 8765);
+
+  // 🎹 Keyboard Shortcuts Initialize kar diye (Space, M, S, R, Arrows)
+  useKeyboardControls();
 
   // 📱 Lock Screen & Bluetooth Control
   useEffect(() => {
@@ -54,6 +69,8 @@ export default function GlobalAudioEngine() {
       ref={audioRef} 
       id="global-audio-player"  // 👈 ProgressBar isko automatically dhoondh lega
       className="hidden" 
+      muted={isMuted}           // 👈 Store se mute control hoga
+      loop={repeatMode === 'one'} // 👈 Agar repeat 'one' hai, tabhi native loop on hoga
       onEnded={nextTrack} 
       onPause={() => setIsPlaying(false)} 
       onPlay={() => setIsPlaying(true)} 

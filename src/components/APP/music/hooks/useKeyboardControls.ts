@@ -2,7 +2,11 @@ import { useEffect } from 'react';
 import { useMusicStore } from "../store";
 
 export const useKeyboardControls = (onNext?: () => void, onPrev?: () => void) => {
-  const { nextTrack, prevTrack } = useMusicStore();
+  const { 
+    nextTrack, prevTrack, isPlaying, setIsPlaying, 
+    toggleMute, toggleShuffle, toggleRepeat 
+  } = useMusicStore();
+
   const triggerNext = onNext || nextTrack;
   const triggerPrev = onPrev || prevTrack;
 
@@ -12,11 +16,35 @@ export const useKeyboardControls = (onNext?: () => void, onPrev?: () => void) =>
     let isHolding = false;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Input field checking
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
+      // 🎵 SPACE: Play / Pause
+      if (e.code === 'Space' || e.key === ' ') {
+        e.preventDefault();
+        setIsPlaying(!isPlaying);
+      }
+
+      // 🔇 M: Mute / Unmute
+      if (e.key.toLowerCase() === 'm') {
+        toggleMute();
+      }
+
+      // 🔀 S: Shuffle
+      if (e.key.toLowerCase() === 's') {
+        toggleShuffle();
+      }
+
+      // 🔁 R: Repeat ('off' -> 'all' -> 'one')
+      if (e.key.toLowerCase() === 'r') {
+        toggleRepeat();
+      }
+
+      // ⬇️ Arrows: Next/Prev
       if (e.key === 'ArrowUp') { e.preventDefault(); triggerPrev(); }
       if (e.key === 'ArrowDown') { e.preventDefault(); triggerNext(); }
       
+      // ⏩ Arrows: Seek
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
         if (e.repeat) return; 
         e.preventDefault();
@@ -37,6 +65,7 @@ export const useKeyboardControls = (onNext?: () => void, onPrev?: () => void) =>
 
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
         clearTimeout(holdTimeout);
         clearInterval(seekInterval);
@@ -51,11 +80,12 @@ export const useKeyboardControls = (onNext?: () => void, onPrev?: () => void) =>
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       clearTimeout(holdTimeout);
       clearInterval(seekInterval);
     };
-  }, [triggerNext, triggerPrev]);
+  }, [triggerNext, triggerPrev, isPlaying, setIsPlaying, toggleMute, toggleShuffle, toggleRepeat]);
 };

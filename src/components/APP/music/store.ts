@@ -34,6 +34,7 @@ interface MusicState {
   queue: string[];
   isShuffle: boolean;
   repeatMode: 'off' | 'all' | 'one';
+  isMuted: boolean; // 👈 Mute state add ki hai
   
   currentTrackIndex: number | null;
   isPlaying: boolean;
@@ -61,6 +62,7 @@ interface MusicState {
   
   toggleShuffle: () => void;
   toggleRepeat: () => void;
+  toggleMute: () => void; // 👈 Mute function add kiya hai
   addToQueue: (path: string) => void;
   playNext: (path: string) => void;
   removeFromQueue: (index: number) => void;
@@ -83,6 +85,7 @@ export const useMusicStore = create<MusicState>()(
       queue: [],
       isShuffle: false,
       repeatMode: 'off',
+      isMuted: false, // 👈 Default state
       currentTrackIndex: null,
       isPlaying: false,
 
@@ -156,8 +159,9 @@ export const useMusicStore = create<MusicState>()(
       removeTrackFromPlaylist: (playlistId, trackPath) => set((state) => ({ playlists: state.playlists.map(p => p.id === playlistId ? { ...p, trackPaths: p.trackPaths.filter(tp => tp !== trackPath) } : p) })),
       toggleFavorite: (path) => set((state) => ({ favorites: state.favorites.includes(path) ? state.favorites.filter(p => p !== path) : [...state.favorites, path] })),
 
-      // 🔀 Queue Actions
+      // 🔀 Queue & Playback Controls Actions
       toggleShuffle: () => set((state) => ({ isShuffle: !state.isShuffle })),
+      toggleMute: () => set((state) => ({ isMuted: !state.isMuted })), // 👈 Mute toggle logic
       toggleRepeat: () => set((state) => {
         const modes: ('off' | 'all' | 'one')[] = ['off', 'all', 'one'];
         const nextIndex = (modes.indexOf(state.repeatMode) + 1) % modes.length;
@@ -205,15 +209,16 @@ export const useMusicStore = create<MusicState>()(
       }
     }),
     { 
-      name: 'hyper-music-native-v7', // Bump to v7 for new timerHistory state
-      partialze: (state) => ({ 
+      name: 'hyper-music-native-v7', 
+      partialize: (state) => ({ 
         savedDirectories: state.savedDirectories, 
         historyPaths: state.historyPaths, 
         playlists: state.playlists, 
         favorites: state.favorites, 
         isShuffle: state.isShuffle, 
         repeatMode: state.repeatMode,
-        timerHistory: state.timerHistory // Memorize user's timer habits
+        isMuted: state.isMuted, // 👈 App reload hone par mute setting yaad rakhega
+        timerHistory: state.timerHistory 
       })
     }
   )
